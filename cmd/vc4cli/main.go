@@ -2,155 +2,130 @@ package main
 
 import (
 	"fmt"
-	"strings"
-	"time"
+	"os"
 
-	"github.com/charmbracelet/bubbles/progress"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/ewilliams0305/VC4-CLI/cmd/vc4cli/views"
 	"github.com/ewilliams0305/VC4-CLI/pkg/vc4"
 )
 
-type tickMsg time.Time
+type errMsg struct{ err error }
 
-type model struct {
-	progress progress.Model
+type MainModel struct {
+	device   vc4.DeviceInfo
+	err      string
+	actions  []string
+	cursor   int
+	selected map[int]struct{}
 }
 
-func (m model) Init() tea.Cmd {
-	return tickCmd()
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		return m, tea.Quit
-
-	case tea.WindowSizeMsg:
-		m.progress.Width = msg.Width - padding*2 - 4
-		if m.progress.Width > maxWidth {
-			m.progress.Width = maxWidth
-		}
-		return m, nil
-
-	case tickMsg:
-		if m.progress.Percent() == 1.0 {
-			return m, tea.Quit
-		}
-
-		// Note that you can also use progress.Model.SetPercent to set the
-		// percentage value explicitly, too.
-		cmd := m.progress.IncrPercent(0.25)
-		return m, tea.Batch(tickCmd(), cmd)
-
-	// FrameMsg is sent when the progress bar wants to animate itself
-	case progress.FrameMsg:
-		progressModel, cmd := m.progress.Update(msg)
-		m.progress = progressModel.(progress.Model)
-		return m, cmd
-
-	default:
-		return m, nil
+func InitialModel() MainModel {
+	return MainModel{
+		device:   vc4.DeviceInfo{},
+		actions:  []string{"Manage Programs", "Manage Rooms", "View Logs"},
+		selected: make(map[int]struct{}),
 	}
 }
 
-func (m model) View() string {
-	pad := strings.Repeat(" ", padding)
-	return "\n" +
-		pad + m.progress.View() + "\n\n" +
-		pad + helpStyle("Press any key to quit")
+func (m MainModel) Init() tea.Cmd {
+	return deviceInfoCommand
 }
 
-func tickCmd() tea.Cmd {
-	return tea.Tick(time.Second*1, func(t time.Time) tea.Msg {
-		return tickMsg(t)
-	})
+func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+
+	case int:
+		m.err = "GOT YOU"
+
+	case *vc4.DeviceInfo:
+		m.device = *msg
+
+	case vc4.DeviceInfo:
+		m.device = msg
+
+	case errMsg:
+		m.err = msg.err.Error()
+
+	case tea.KeyMsg:
+
+		// Cool, what was the actual key pressed?
+		switch msg.String() {
+
+		// These keys should exit the program.
+		case "ctrl+c", "q":
+			return m, tea.Quit
+
+		// The "up" and "k" keys move the cursor up
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+
+		// The "down" and "j" keys move the cursor down
+		case "down", "j":
+			if m.cursor < len(m.actions)-1 {
+				m.cursor++
+			}
+
+		// The "enter" key and the spacebar (a literal space) toggle
+		// the selected state for the item that the cursor is pointing at.
+		case "enter", " ":
+			_, ok := m.selected[m.cursor]
+			if ok {
+				delete(m.selected, m.cursor)
+			} else {
+				m.selected[m.cursor] = struct{}{}
+			}
+
+			return NewHelpModel(), nil
+		case "i":
+			return NewDeviceTable(m.device), nil
+		}
+
+	}
+
+	// Return the updated model to the Bubble Tea runtime for processing.
+	// Note that we're not returning a command.
+	return m, nil
 }
 
-const (
-	padding  = 2
-	maxWidth = 80
-)
+func (m MainModel) View() string {
+	// The header
+	s := views.Logo + "\n\n"
+	info := NewDeviceTable(m.device)
+	s += baseStyle.Render(info.table.View()) + "\n"
 
-var helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#626262")).Render
+	// Iterate over our choices
+	for i, choice := range m.actions {
+
+		// Is the cursor pointing at this choice?
+		cursor := " " // no cursor
+		if m.cursor == i {
+			cursor = ">" // cursor!
+		}
+
+		// Is this choice selected?
+		checked := " " // not selected
+		if _, ok := m.selected[i]; ok {
+			checked = "x" // selected!
+		}
+
+		// Render the row
+		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+	}
+
+	// The footer
+	s += "\nPress q to quit.\n"
+	s += "\n" + m.err
+
+	// Send the UI for rendering
+	return s
+}
 
 func main() {
-
-	info, err := vc4.GetDeviceInfo()
-
-	if err != nil {
-		//return
-	}
-
-	fmt.Printf("DEVICE INFO %+v", info)
-	m := model{
-		progress: progress.New(progress.WithDefaultGradient()),
-	}
-
-	if _, err := tea.NewProgram(m).Run(); err != nil {
-		fmt.Println("Oh no!", err)
-		//os.Exit(1)
-	}
-
-	p := tea.NewProgram(initialModel())
+	p := tea.NewProgram(InitialModel())
 	if _, err := p.Run(); err != nil {
-		//log.Fatal(err)
+		fmt.Printf("Alas, there's been an error: %v", err)
+		os.Exit(1)
 	}
-
-	showCommands()
-}
-
-type (
-	errMsg error
-)
-
-type modelText struct {
-	textInput textinput.Model
-	err       error
-}
-
-func initialModel() modelText {
-	ti := textinput.New()
-	ti.Placeholder = "Pikachu"
-	ti.Focus()
-	ti.CharLimit = 156
-	ti.Width = 20
-
-	return modelText{
-		textInput: ti,
-		err:       nil,
-	}
-}
-
-func (m modelText) Init() tea.Cmd {
-	return textinput.Blink
-}
-
-func (m modelText) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
-			return m, tea.Quit
-		}
-
-	// We handle errors just like any other message
-	case errMsg:
-		m.err = msg
-		return m, nil
-	}
-
-	m.textInput, cmd = m.textInput.Update(msg)
-	return m, cmd
-}
-
-func (m modelText) View() string {
-	return fmt.Sprintf(
-		"What’s your favorite Pokémon?\n\n%s\n\n%s",
-		m.textInput.View(),
-		"(esc to quit)",
-	) + "\n"
 }
