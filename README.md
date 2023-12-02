@@ -14,5 +14,16 @@ The VC4 CLI leverages the Crestron Virtual control REST API with a loopback IP a
 to provide a localized CLI for the VC4 service. This CLI 
 uses the `BubbleTea` TUI framework for navigation and command line workflows. 
 
+# Building 
+To compile the cli for your VC4 appliance you will beed to install
+the GO sdk. Download the SDK https://go.dev/dl/
+ 
+Once download you can build the /cmd/cli directory as an executable. 
+### Windows
+
+### Linux
+
 # Crestron REST API Reference 
 https://www.crestron.com/getmedia/29921c49-86df-488c-a63b-ab88620d7175/mg_pg_rest-api-crestron-virtual-control
+
+
