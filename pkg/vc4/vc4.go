@@ -10,6 +10,10 @@ const (
 	DEVICEINFO string = "DeviceInfo"
 )
 
+type VirtualControl interface {
+ 
+}
+
 var client *http.Client = createClient()
 
 func createClient() *http.Client {
