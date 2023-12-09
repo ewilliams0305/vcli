@@ -28,10 +28,10 @@ uses the `BubbleTea` TUI framework for navigation and command line workflows.
 To compile the cli for your VC4 appliance you will need to install
 the GO sdk. Download the SDK at https://go.dev/dl/ Once download you can build the ~/. root repository directory as an executable. 
 
-### Windows
+## Windows
 To build on windows for windows simply navigate to the repostiry root director and issue `go build ./...` to compile an EXE including all child modules.  See the go sdk documentation for more details and optional compiler flags.
 
-### Linux
+## Linux
 To build the CLI from a windows computer for the VC4 appliance, you can use the go cross compiler.  Ensure the go compiler is installed on your machine and open a ![Static Badge](https://img.shields.io/badge/POWER-SHELL-yellow) terminal session.
 
 ![Readme Image](./docs/ps_build.png)
