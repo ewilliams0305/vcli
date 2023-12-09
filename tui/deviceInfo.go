@@ -5,7 +5,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	vc "github.com/ewilliams0305/VC4-CLI/virtual_control"
+	vc "github.com/ewilliams0305/VC4-CLI/vc"
 )
 
 func DeviceInfoCommand() tea.Msg {

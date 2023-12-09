@@ -5,7 +5,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	vc "github.com/ewilliams0305/VC4-CLI/virtual_control"
+	vc "github.com/ewilliams0305/VC4-CLI/vc"
 )
 
 type appState int
@@ -46,7 +46,7 @@ func InitialModel() MainModel {
 }
 
 func (m MainModel) Init() tea.Cmd {
-	return tui.DeviceInfoCommand
+	return DeviceInfoCommand
 }
 
 func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -95,9 +95,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.selected[m.cursor] = struct{}{}
 			}
 
-			return views.NewHelpModel(), nil
+			return NewHelpModel(), nil
 		case "i":
-			return tui.NewDeviceTable(m.device), nil
+			return NewDeviceTable(m.device), nil
 		}
 
 	}
@@ -109,9 +109,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m MainModel) View() string {
 	// The header
-	s := views.Logo + "\n\n"
-	info := tui.NewDeviceTable(m.device)
-	s += tui.BaseStyle.Render(info.Table.View()) + "\n"
+	s := Logo + "\n\n"
+	info := NewDeviceTable(m.device)
+	s += BaseStyle.Render(info.Table.View()) + "\n"
 
 	// Iterate over our choices
 	for i, choice := range m.actions {

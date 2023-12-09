@@ -1,4 +1,4 @@
-package vc4
+package vc
 
 import (
 	"net/http"
@@ -11,7 +11,7 @@ const (
 )
 
 type VirtualControl interface {
- GetDeviceInfo() (DeviceInfo, error)
+	GetDeviceInfo() (DeviceInfo, error)
 }
 
 var client *http.Client = createClient()

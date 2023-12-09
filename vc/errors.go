@@ -1,4 +1,4 @@
-package vc4
+package vc
 
 import "fmt"
 

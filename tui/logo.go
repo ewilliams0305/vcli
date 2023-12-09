@@ -1,4 +1,4 @@
-package views
+package tui
 
 const (
 	Logo string = `
