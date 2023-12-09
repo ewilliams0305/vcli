@@ -9,6 +9,11 @@ __      _______ _  _      _____ _      _____
 ```
 
 # VC4-CLI
+Ever found yourself connected to a VC4 appliance troublshooting the OS, working on the file system,
+or restarting services, only to find you can't perform actions on the actual VC4 service? Well now you can. 
+The VC4 CLI provides full control over the VC4 service from within the linux terminal allowing operators to:
+
+
 Command line interface to operate a Crestron Virtual Control server application from the Linux Shell
 The VC4 CLI leverages the Crestron Virtual control REST API with a loopback IP address 
 to provide a localized CLI for the VC4 service. This CLI 
