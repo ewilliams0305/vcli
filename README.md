@@ -25,12 +25,14 @@ to provide a localized CLI for the VC4 service. This CLI
 uses the `BubbleTea` TUI framework for navigation and command line workflows. 
 
 # Building 
-To compile the cli for your VC4 appliance you will beed to install
-the GO sdk. Download the SDK https://go.dev/dl/
- 
-Once download you can build the /cmd/cli directory as an executable. 
+To compile the cli for your VC4 appliance you will need to install
+the GO sdk. Download the SDK at https://go.dev/dl/ Once download you can build the ~/. root repository directory as an executable. 
+
 ### Windows
-To build on windows for your VC4 appliance you can use the go lan cross compiler.  Ensure the go compiler is installed on your machine and open a ![Static Badge](https://img.shields.io/badge/POWER-SHELL-yellow) terminal session.
+To build on windows for windows simply navigate to the repostiry root director and issue `go build ./...` to compile an EXE including all child modules.  See the go sdk documentation for more details and optional compiler flags.
+
+### Linux
+To build the CLI from a windows computer for the VC4 appliance, you can use the go cross compiler.  Ensure the go compiler is installed on your machine and open a ![Static Badge](https://img.shields.io/badge/POWER-SHELL-yellow) terminal session.
 
 ![Readme Image](./docs/ps_build.png)
 
@@ -49,8 +51,6 @@ Run the ![Static Badge](https://img.shields.io/badge/GO-BUILD-red) command to cr
 Once compiled you should have a file titled ![Static Badge](https://img.shields.io/badge/VC4-CLI-green) with no file extension (remeber linux...).
 
 Copy this file to your VC4 appliance and execute `chmod +x ./VC4-CLI` to allow execution.  Finally run the application `./VC4-CLI`.  Of course you can name this file anything you like and add addtional flags to the go build command.
-
-### Linux
 
 # Crestron REST API Reference 
 https://www.crestron.com/getmedia/29921c49-86df-488c-a63b-ab88620d7175/mg_pg_rest-api-crestron-virtual-control
