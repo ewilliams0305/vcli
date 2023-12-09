@@ -106,6 +106,15 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			//return NewHelpModel(), nil
 		case "i":
+			m.state = info
+			return NewDeviceInfo(), DeviceInfoCommand
+
+		case "r":
+			m.state = rooms
+			return NewRoomsModel(), RoomCommand
+
+		case "p":
+			m.state = programs
 			return NewDeviceInfo(), DeviceInfoCommand
 		}
 
