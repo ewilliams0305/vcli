@@ -8,31 +8,44 @@ import (
 	vc "github.com/ewilliams0305/VC4-CLI/vc"
 )
 
-func DeviceInfoCommand() tea.Msg {
-
-	info, err := server.DeviceInfo()
-	if err != nil {
-		return err
-	}
-
-	return info
+type DeviceTableModel struct {
+	Table table.Model
+	Help  HelpModel
+	row   string
 }
 
 var BaseStyle = lipgloss.NewStyle().
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderForeground(lipgloss.Color("240"))
 
-type DeviceTableModel struct {
-	Table table.Model
+var SelectText = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(lipgloss.Color("#FAFAFA")).
+	Background(lipgloss.Color("#7D56F4")).
+	PaddingTop(1).
+	PaddingLeft(1).
+	MarginBottom(1).
+	Width(76).Align(lipgloss.Top).
+	Height(3)
+
+func NewDeviceInfo() DeviceTableModel {
+	return DeviceTableModel{}
 }
 
 func (m DeviceTableModel) Init() tea.Cmd {
-	return nil
+	return DeviceInfoCommand
 }
 
 func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+
+	case vc.DeviceInfo:
+		return NewDeviceTable(msg), nil
+
+	case error:
+		return NewDeviceErrorTable(msg), nil
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
@@ -41,6 +54,12 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.Table.Focus()
 			}
+		case "down":
+			m.Table.SetCursor(m.Table.Cursor() + 1)
+
+		case "up":
+			m.Table.SetCursor(m.Table.Cursor() - 1)
+
 		case "q", "ctrl+c":
 			return InitialModel(), nil
 		case "enter":
@@ -49,12 +68,23 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			)
 		}
 	}
+	m.row = m.Table.SelectedRow()[0] + ": " + m.Table.SelectedRow()[1]
+
 	m.Table, cmd = m.Table.Update(msg)
 	return m, cmd
 }
 
 func (m DeviceTableModel) View() string {
-	return BaseStyle.Render(m.Table.View()) + "\n"
+	s := DisplayLogo()
+	s += BaseStyle.Render(m.Table.View()) + "\n\n"
+
+	if len(m.row) > 0 {
+		s += SelectText.Render(m.row)
+	}
+
+	s += m.Help.renderHelpInfo()
+
+	return s
 }
 
 func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
@@ -94,7 +124,9 @@ func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
 		Bold(false)
 	t.SetStyles(s)
 
-	return DeviceTableModel{t}
+	return DeviceTableModel{
+		Table: t,
+		Help:  NewHelpModel()}
 }
 
 func NewDeviceErrorTable(msg vc.VirtualControlError) DeviceTableModel {
@@ -130,5 +162,14 @@ func NewDeviceErrorTable(msg vc.VirtualControlError) DeviceTableModel {
 		Bold(true).Italic(true)
 	t.SetStyles(s)
 
-	return DeviceTableModel{t}
+	return DeviceTableModel{Table: t, Help: NewHelpModel()}
+}
+
+func DeviceInfoCommand() tea.Msg {
+
+	info, err := server.DeviceInfo()
+	if err != nil {
+		return err
+	}
+	return info
 }

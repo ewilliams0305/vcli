@@ -37,8 +37,5 @@ func getDeviceInfo(vc *vc) (DeviceInfo, VirtualControlError) {
 }
 
 func emptyDeviceInfo() DeviceInfo {
-	return DeviceInfo{
-		DeviceKey:  "",
-		MACAddress: "00:00:00:00:00:00",
-	}
+	return DeviceInfo{}
 }

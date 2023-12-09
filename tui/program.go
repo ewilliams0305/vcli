@@ -36,6 +36,7 @@ type MainModel struct {
 	actions  []string
 	cursor   int
 	selected map[int]struct{}
+	help     HelpModel
 }
 
 func InitialModel() MainModel {
@@ -43,6 +44,7 @@ func InitialModel() MainModel {
 		device:   vc.DeviceInfo{},
 		actions:  []string{"Manage Programs", "Manage Rooms", "View Logs"},
 		selected: make(map[int]struct{}),
+		help:     NewHelpModel(),
 	}
 }
 
@@ -64,7 +66,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 
-		// Cool, what was the actual key pressed?
+		//TODO: Change these to match the keys in the help.go file
+		// switch {
+		// case key.Matches(msg, Keys.Info):
+		// 	return NewDeviceInfo(), nil
+		// }
+
+		// THE MESSAGE IS A KEYPRESS
 		switch msg.String() {
 
 		// These keys should exit the program.
@@ -83,6 +91,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor++
 			}
 
+		case "?", "":
+			return NewHelpModel(), nil
+
 		// The "enter" key and the spacebar (a literal space) toggle
 		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
@@ -93,9 +104,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.selected[m.cursor] = struct{}{}
 			}
 
-			return NewHelpModel(), nil
+			//return NewHelpModel(), nil
 		case "i":
-			return NewDeviceTable(m.device), nil
+			return NewDeviceInfo(), DeviceInfoCommand
 		}
 
 	}
@@ -107,7 +118,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m MainModel) View() string {
 	// The header
-	s := Logo + "\n\n"
+	s := DisplayLogo()
 
 	if m.err != nil {
 		info := NewDeviceErrorTable(m.err)
@@ -137,10 +148,7 @@ func (m MainModel) View() string {
 	}
 
 	// The footer
-	s += "\nPress q to quit.\n"
-	//s += "\n" + m.err
-
-	// Send the UI for rendering
+	s += m.help.renderHelpInfo()
 	return s
 }
 
@@ -149,7 +157,6 @@ func Run() {
 	server = initServer()
 
 	// TODO: Process addtional flags to send instant actions to the device.
-
 	p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("VC4 CLI failed to start, there's been an error: %v", err)
