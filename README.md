@@ -13,6 +13,10 @@ Ever found yourself connected to a VC4 appliance troublshooting the OS, working 
 or restarting services, only to find you can't perform actions on the actual VC4 service? Well now you can. 
 The VC4 CLI provides full control over the VC4 service from within the linux terminal allowing operators to:
 
+![Static Badge](https://img.shields.io/badge/LOAD-PROGRAMS-blue)
+![Static Badge](https://img.shields.io/badge/CREATE-ROOMS-green)
+![Static Badge](https://img.shields.io/badge/RESET-ROOMS-yellow)
+![Static Badge](https://img.shields.io/badge/VIEW-STATUS-red)
 
 Command line interface to operate a Crestron Virtual Control server application from the Linux Shell
 The VC4 CLI leverages the Crestron Virtual control REST API with a loopback IP address 
