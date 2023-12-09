@@ -1,21 +1,25 @@
 package vc
 
-type DeviceInfo struct {
-	DeviceKey          string `json:"DeviceKey"`
-	DeviceId           string `json:"DeviceId"`
-	ApplicationVersion string `json:"ApplicationVersion"`
-	Manufacturer       string `json:"Manufacturer"`
-	ID                 string `json:"ID"`
-	MacAddress         string `json:"MacAddress"`
-	Model1             string `json:"Model1"`
-	Category           string `json:"Category"`
-	BuildDate          string `json:"BuildDate"`
-	Version            string `json:"Version"`
-	Name               string `json:"Name"`
-	PythonVersion      string `json:"PythonVersion"`
-	MonoVersion        string `json:"MonoVersion"`
+type DeviceInformationResponse struct {
+	Device Device `json:"Device"`
 }
 
 type Device struct {
 	DeviceInfo DeviceInfo `json:"DeviceInfo"`
+}
+
+type DeviceInfo struct {
+	ID                 string `json:"ID"`
+	Model              string `json:"Model"`
+	Category           string `json:"Category"`
+	Manufacturer       string `json:"Manufacturer"`
+	DeviceID           string `json:"DeviceId"`
+	Name               string `json:"Name"`
+	ApplicationVersion string `json:"ApplicationVersion"`
+	BuildDate          string `json:"BuildDate"`
+	DeviceKey          string `json:"DeviceKey"`
+	MACAddress         string `json:"MacAddress"`
+	Version            string `json:"Version"`
+	PythonVersion      string `json:"PythonVersion"`
+	MonoVersion        string `json:"MonoVersion"`
 }

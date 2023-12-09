@@ -11,7 +11,7 @@
             "mode": "auto",
             "program": ".",
             "args": [
-                "-h", "10.0.0.111",
+                "-h", "10.0.50.50",
                 "-t","eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6Ijk0NDliMDM0LTcyNWEtNDM0Ny04YTMzLTc5Zjg2MDNlYjUyYiIsImx2IjoiRGVmYXVsdCBMZXZlbCIsInZlciI6IjEuMCIsImV4cGkiOiIwIn0.oMs434gmWR-x4sTGKonmndOA5F62FdzrwYZQYSGNd2A"
             ]
         }

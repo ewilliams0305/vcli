@@ -2,6 +2,7 @@ package vc
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 )
 
@@ -9,35 +10,35 @@ const (
 	DEVICEINFO = "DeviceInfo"
 )
 
-func getDeviceInfo(vc *vc) (DeviceInfo, error) {
+func getDeviceInfo(vc *vc) (DeviceInfo, VirtualControlError) {
 
 	resp, err := vc.client.Get(vc.url + DEVICEINFO)
 	if err != nil {
-		return emptyDeviceInfo(), err
+		return emptyDeviceInfo(), newServerError(500, err)
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		return emptyDeviceInfo(), newServerError(resp.StatusCode, errors.New("FAILED TO GET DEVICE INFO"))
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return emptyDeviceInfo(), err
+		return emptyDeviceInfo(), newServerError(resp.StatusCode, err)
 	}
 
-	if resp.StatusCode != 200 {
-		return emptyDeviceInfo(), newResponseError(resp.StatusCode)
-	}
-
-	var deviceData Device
+	var deviceData DeviceInformationResponse
 	err = json.Unmarshal(body, &deviceData)
 	if err != nil {
-		return emptyDeviceInfo(), err
+		return emptyDeviceInfo(), newServerError(resp.StatusCode, err)
 	}
 
-	return deviceData.DeviceInfo, nil
+	return deviceData.Device.DeviceInfo, nil
 }
 
 func emptyDeviceInfo() DeviceInfo {
 	return DeviceInfo{
 		DeviceKey:  "",
-		MacAddress: "00:00:00:00:00:00",
+		MACAddress: "00:00:00:00:00:00",
 	}
 }
