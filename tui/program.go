@@ -2,11 +2,14 @@ package tui
 
 import (
 	"fmt"
+	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 
 	vc "github.com/ewilliams0305/VC4-CLI/vc"
 )
+
+var server vc.VirtualControl
 
 type appState int
 
@@ -138,4 +141,25 @@ func (m MainModel) View() string {
 
 	// Send the UI for rendering
 	return s
+}
+
+func Run() {
+
+	server = initServer()
+
+	// TODO: Process addtional flags to send instant actions to the device.
+
+	p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("VC4 CLI failed to start, there's been an error: %v", err)
+		os.Exit(1)
+	}
+}
+
+func initServer() vc.VirtualControl {
+	// TODO: Possible create an error if token and host are invlid
+	if (len(Hostname) > 0) && (len(Token) > 0) {
+		return vc.NewRemoteVC(Hostname, Token)
+	}
+	return vc.NewLocalVC()
 }

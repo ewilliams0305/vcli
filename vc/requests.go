@@ -5,9 +5,13 @@ import (
 	"io"
 )
 
-func GetDeviceInfo() (DeviceInfo, error) {
+const (
+	DEVICEINFO = "DeviceInfo"
+)
 
-	resp, err := client.Get(makeUrl(DEVICEINFO))
+func getDeviceInfo(vc *vc) (DeviceInfo, error) {
+
+	resp, err := vc.client.Get(vc.url + DEVICEINFO)
 	if err != nil {
 		return emptyDeviceInfo(), err
 	}

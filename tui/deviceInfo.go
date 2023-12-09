@@ -10,7 +10,7 @@ import (
 
 func DeviceInfoCommand() tea.Msg {
 
-	info, err := vc.GetDeviceInfo()
+	info, err := server.DeviceInfo()
 	if err != nil {
 		return info
 	}

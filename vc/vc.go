@@ -1,53 +1,88 @@
 package vc
 
 import (
+	"fmt"
 	"net/http"
-	"time"
 )
 
 const (
-	HOSTURL    string = "http://127.0.0.1:5000/"
-	DEVICEINFO string = "DeviceInfo"
+	virtualBaseUrl = "/VirtualControl/config/api/"
 )
 
+// The virtual control server will need to be controlled one of two ways:
+//
+// - https with a authorization header
+// - http local host without auth.
+//
+// Controlling local host :
+// -- requires the /VirtualControl/config/api/ be removed from the route
+// -- Local host port 5000
+// -- use http NOT https
+//
+// Controlling external:
+// -- full path urls https://[ServerURL]/VirtualControl/config/api/
+// -- use of https, I'm not writing this for unsecured servers.
+// -- accept self signed certs, this si way too common not too!
+// -- header  "Authorization: [Token]"
 type VirtualControl interface {
-	GetDeviceInfo() (DeviceInfo, error)
+	Config() *VirtualConfig
+	DeviceInfo() (DeviceInfo, error)
 }
 
-var client *http.Client = createClient()
+type vc struct {
+	client   *http.Client
+	url      string
+	http     bool
+	port     int
+	hostname string
+	token    string
+}
 
-func createClient() *http.Client {
-	tr := &http.Transport{}
+type VirtualConfig struct {
+	http     bool
+	port     *int
+	hostname *string
+	token    *string
+}
 
-	client := &http.Client{
-		Transport: tr,
-		Timeout:   5 * time.Second}
+// Create VC Clients
 
-	client.Transport = &headerTransport{
-		transport: client.Transport,
-		header:    http.Header{"xContent-Type": []string{"application/json"}},
+func NewLocalVC() VirtualControl {
+	return &vc{
+		client:   createLocalClient(),
+		url:      LOCALHOSTURL,
+		http:     true,
+		port:     5000,
+		hostname: "127.0.0.1",
+		token:    "",
 	}
-
-	return client
 }
 
-// headerTransport is a custom transport that adds headers to each request
-type headerTransport struct {
-	transport http.RoundTripper
-	header    http.Header
-}
-
-// RoundTrip adds the custom header to the request and delegates the actual
-// request to the underlying transport.
-func (t *headerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Add custom headers to the request
-	for key, values := range t.header {
-		req.Header[key] = values
+func NewRemoteVC(host string, token string) VirtualControl {
+	return &vc{
+		client:   createRemoteClient(token),
+		url:      baseUrl(host),
+		http:     false,
+		port:     5000,
+		hostname: host,
+		token:    token,
 	}
-
-	return t.transport.RoundTrip(req)
 }
 
-func makeUrl(url string) string {
-	return HOSTURL + url
+func baseUrl(host string) string {
+	return fmt.Sprintf("https://%s%s", host, virtualBaseUrl)
+}
+
+// Implement the VC Interface
+func (v *vc) Config() *VirtualConfig {
+	return &VirtualConfig{
+		http:     v.http,
+		port:     &v.port,
+		hostname: &v.hostname,
+		token:    &v.token,
+	}
+}
+
+func (v *vc) DeviceInfo() (DeviceInfo, error) {
+	return getDeviceInfo(v)
 }
