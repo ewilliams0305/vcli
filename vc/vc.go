@@ -26,7 +26,7 @@ const (
 // -- header  "Authorization: [Token]"
 type VirtualControl interface {
 	Config() *VirtualConfig
-	DeviceInfo() (DeviceInfo, error)
+	DeviceInfo() (DeviceInfo, VirtualControlError)
 }
 
 type vc struct {
@@ -83,6 +83,6 @@ func (v *vc) Config() *VirtualConfig {
 	}
 }
 
-func (v *vc) DeviceInfo() (DeviceInfo, error) {
+func (v *vc) DeviceInfo() (DeviceInfo, VirtualControlError) {
 	return getDeviceInfo(v)
 }

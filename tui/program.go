@@ -29,12 +29,10 @@ const (
 	auth appState = 4
 )
 
-type errMsg struct{ err error }
-
 type MainModel struct {
 	state    appState
 	device   vc.DeviceInfo
-	err      string
+	err      error
 	actions  []string
 	cursor   int
 	selected map[int]struct{}
@@ -55,17 +53,14 @@ func (m MainModel) Init() tea.Cmd {
 func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
-	case int:
-		m.err = "GOT YOU"
-
 	case *vc.DeviceInfo:
 		m.device = *msg
 
 	case vc.DeviceInfo:
 		m.device = msg
 
-	case errMsg:
-		m.err = msg.err.Error()
+	case error:
+		m.err = msg
 
 	case tea.KeyMsg:
 
@@ -113,8 +108,14 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m MainModel) View() string {
 	// The header
 	s := Logo + "\n\n"
-	info := NewDeviceTable(m.device)
-	s += BaseStyle.Render(info.Table.View()) + "\n"
+
+	if m.err != nil {
+		info := NewDeviceErrorTable(m.err)
+		s += BaseStyle.Render(info.Table.View()) + "\n"
+	} else {
+		info := NewDeviceTable(m.device)
+		s += BaseStyle.Render(info.Table.View()) + "\n"
+	}
 
 	// Iterate over our choices
 	for i, choice := range m.actions {
@@ -137,7 +138,7 @@ func (m MainModel) View() string {
 
 	// The footer
 	s += "\nPress q to quit.\n"
-	s += "\n" + m.err
+	//s += "\n" + m.err
 
 	// Send the UI for rendering
 	return s

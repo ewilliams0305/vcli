@@ -12,7 +12,7 @@ func DeviceInfoCommand() tea.Msg {
 
 	info, err := server.DeviceInfo()
 	if err != nil {
-		return info
+		return err
 	}
 
 	return info
@@ -59,22 +59,27 @@ func (m DeviceTableModel) View() string {
 
 func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
 	columns := []table.Column{
-		{Title: "Device Id", Width: 4},
-		{Title: "MAC", Width: 4},
-		{Title: "Build Data", Width: 10},
-		{Title: "Mono Version", Width: 10},
-		{Title: "Python Version", Width: 10},
+		{Title: "SERVER INFOMATION", Width: 20},
+		{Title: "", Width: 50},
 	}
 
 	rows := []table.Row{
-		{info.ID, info.MacAddress, info.BuildDate, info.MonoVersion, info.PythonVersion},
+		{"Hostname", info.Name},
+		{"MAC Address", info.MACAddress},
+		{"Build Date", info.BuildDate},
+		{"App Version", info.ApplicationVersion},
+		{"Firmware", info.Version},
+		{"Mono Version", info.MonoVersion},
+		{"Python Version", info.PythonVersion},
+		{"Manufacturer", info.Manufacturer},
+		{"Model", info.Model},
 	}
 
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(7),
+		table.WithFocused(false),
+		table.WithHeight(9),
 	)
 
 	s := table.DefaultStyles()
@@ -82,7 +87,7 @@ func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240")).
 		BorderBottom(true).
-		Bold(false)
+		Bold(true)
 	s.Selected = s.Selected.
 		Foreground(lipgloss.Color("229")).
 		Background(lipgloss.Color("57")).
@@ -92,15 +97,18 @@ func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
 	return DeviceTableModel{t}
 }
 
-func NewDeviceErrorTable(msg error) DeviceTableModel {
+func NewDeviceErrorTable(msg vc.VirtualControlError) DeviceTableModel {
 	columns := []table.Column{
-		{Title: "ERROR", Width: 10},
-		{Title: "MESSAGE", Width: 10},
-		{Title: "CODE", Width: 10},
+		{Title: "SERVER ERROR", Width: 20},
+		{Title: "", Width: 100},
 	}
 
 	rows := []table.Row{
-		{msg.Error(), msg.Error(), msg.Error()},
+		{"ERROR", msg.Error()},
+		{"", ""},
+		{"MESSAGE", "There was an error connecting to the VC4 service"},
+		{"", "Please verify your IP address and token"},
+		{"", "Please veriify the virtualcontrol service is enabled and running."},
 	}
 
 	t := table.New(
@@ -118,8 +126,8 @@ func NewDeviceErrorTable(msg error) DeviceTableModel {
 		Bold(false)
 	s.Selected = s.Selected.
 		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
-		Bold(false)
+		Background(lipgloss.Color("#FF0000")).
+		Bold(true).Italic(true)
 	t.SetStyles(s)
 
 	return DeviceTableModel{t}

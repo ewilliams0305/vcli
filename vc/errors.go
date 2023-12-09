@@ -1,6 +1,28 @@
 package vc
 
-import "fmt"
+import (
+	"fmt"
+)
+
+type VirtualControlError interface {
+	Error() string
+}
+
+type ServerError struct {
+	code int
+	err  error
+}
+
+func (e *ServerError) Error() string {
+	return fmt.Sprintf("%d | %s", e.code, e.err)
+}
+
+func newServerError(code int, err error) *ServerError {
+	return &ServerError{
+		err:  err,
+		code: code,
+	}
+}
 
 // Stores an invalid HTTP response as a status code.
 type HttpResponseError struct {
