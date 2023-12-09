@@ -1,80 +1,27 @@
-// package tui
+package tui
 
-// import (
-// 	"errors"
-// 	"flag"
-// 	"fmt"
-// 	"strings"
-// 	"time"
-// )
+import (
+	"flag"
+)
 
-// // Example 1: A single string flag called "species" with default value "gopher".
-// var host = flag.String("host", "127.0.0.1", "The IP or hostname of the virtual control service")
+// // The hostname passed into the application as a command line argument flag
+// var HostnameFlag = flag.String("host", "127.0.0.1", "The IP or hostname of the virtual control service")
 
-// // Example 2: Two flags sharing a variable, so we can have a shorthand.
-// // The order of initialization is undefined, so make sure both use the
-// // same default value. They must be set up with an init function.
-// var gopherType string
+// // The API token generated from the VC4 webpage, this is required to control an external appliance
+// var TokenFlag = flag.String("token", "", "The API token generated from the VC4 webpage, this is required to control an external appliance")
 
-// func init() {
-// 	const (
-// 		defaultGopher = "pocket"
-// 		usage         = "the variety of gopher"
-// 	)
-// 	flag.StringVar(&gopherType, "gopher_type", defaultGopher, usage)
-// 	flag.StringVar(&gopherType, "g", defaultGopher, usage+" (shorthand)")
-// }
+var Hostname string
+var Token string
 
-// // Example 3: A user-defined flag type, a slice of durations.
-// type interval []time.Duration
-
-// // String is the method to format the flag's value, part of the flag.Value interface.
-// // The String method's output will be used in diagnostics.
-// func (i *interval) String() string {
-// 	return fmt.Sprint(*i)
-// }
-
-// // Set is the method to set the flag value, part of the flag.Value interface.
-// // Set's argument is a string to be parsed to set the flag.
-// // It's a comma-separated list, so we split it.
-// func (i *interval) Set(value string) error {
-// 	// If we wanted to allow the flag to be set multiple times,
-// 	// accumulating values, we would delete this if statement.
-// 	// That would permit usages such as
-// 	//	-deltaT 10s -deltaT 15s
-// 	// and other combinations.
-// 	if len(*i) > 0 {
-// 		return errors.New("interval flag already set")
-// 	}
-// 	for _, dt := range strings.Split(value, ",") {
-// 		duration, err := time.ParseDuration(dt)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		*i = append(*i, duration)
-// 	}
-// 	return nil
-// }
-
-// // Define a flag to accumulate durations. Because it has a special type,
-// // we need to use the Var function and therefore create the flag during
-// // init.
-
-// var intervalFlag interval
-
-// func init() {
-// 	// Tie the command-line flag to the intervalFlag variable and
-// 	// set a usage message.
-// 	flag.Var(&intervalFlag, "deltaT", "comma-separated list of intervals to use between events")
-// }
-
-// func main() {
-// 	// All the interesting pieces are with the variables declared above, but
-// 	// to enable the flag package to see the flags defined there, one must
-// 	// execute, typically at the start of main (not init!):
-// 	//	flag.Parse()
-// 	// We don't call it here because this code is a function called "Example"
-// 	// that is part of the testing suite for the package, which has already
-// 	// parsed the flags. When viewed at pkg.go.dev, however, the function is
-// 	// renamed to "main" and it could be run as a standalone example.
-// }
+func InitFlags() {
+	const (
+		defaultHost  = "127.0.0.1"
+		defaultToken = ""
+		hostUsage    = "The IP or hostname of the virtual control service"
+		tokenUsage   = "The API token generated from the VC4 webpage, this is required to control an external appliance"
+	)
+	flag.StringVar(&Hostname, "host", defaultHost, hostUsage)
+	flag.StringVar(&Hostname, "h", defaultHost, hostUsage+" (shorthand)")
+	flag.StringVar(&Token, "token", defaultToken, tokenUsage)
+	flag.StringVar(&Token, "t", defaultToken, tokenUsage+" (shorthand)")
+}
