@@ -9,9 +9,28 @@ import (
 	"github.com/ewilliams0305/VC4-CLI/pkg/vc4"
 )
 
+type appState int
+
+const(
+ // HOME VIEW, Displays dev info and main menu with text input for commands
+ // ALL otger const states will make our main menu
+ home appState = 0
+ // PROGAM VIEW, displays all programs loaded 
+ programs appState = 1
+ // ROOM VIEW, display all program instances
+ rooms appState = 2
+ // INFO VIEW, displays all hardware and system information
+ info appState = 3
+ // DEVICES VIEW, displays all the device IP Tables and maps
+ devices appState = 4
+ // AUTH VIEW, displays all auth and api tokens
+ auth appState = 4
+)
+
 type errMsg struct{ err error }
 
 type MainModel struct {
+ state    appState 
 	device   vc4.DeviceInfo
 	err      string
 	actions  []string
@@ -125,7 +144,7 @@ func (m MainModel) View() string {
 func main() {
 	p := tea.NewProgram(InitialModel())
 	if _, err := p.Run(); err != nil {
-		fmt.Printf("Alas, there's been an error: %v", err)
+		fmt.Printf("VC4 CLI failed to start, there's been an error: %v", err)
 		os.Exit(1)
 	}
 }
