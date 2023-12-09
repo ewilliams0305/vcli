@@ -36,6 +36,7 @@ type MainModel struct {
 	actions  []string
 	cursor   int
 	selected map[int]struct{}
+	help     HelpModel
 }
 
 func InitialModel() MainModel {
@@ -43,6 +44,7 @@ func InitialModel() MainModel {
 		device:   vc.DeviceInfo{},
 		actions:  []string{"Manage Programs", "Manage Rooms", "View Logs"},
 		selected: make(map[int]struct{}),
+		help:     NewHelpModel(),
 	}
 }
 
@@ -137,10 +139,7 @@ func (m MainModel) View() string {
 	}
 
 	// The footer
-	s += "\nPress q to quit.\n"
-	//s += "\n" + m.err
-
-	// Send the UI for rendering
+	s += m.help.renderHelpInfo()
 	return s
 }
 
@@ -149,7 +148,6 @@ func Run() {
 	server = initServer()
 
 	// TODO: Process addtional flags to send instant actions to the device.
-
 	p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("VC4 CLI failed to start, there's been an error: %v", err)
