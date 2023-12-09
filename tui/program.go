@@ -26,25 +26,27 @@ const (
 	// DEVICES VIEW, displays all the device IP Tables and maps
 	devices appState = 4
 	// AUTH VIEW, displays all auth and api tokens
-	auth appState = 4
+	auth appState = 5
+	// HELP VIEW
+	helpState appState = 6
 )
 
 type MainModel struct {
-	state    appState
-	device   vc.DeviceInfo
-	err      error
-	actions  []string
-	cursor   int
-	selected map[int]struct{}
-	help     HelpModel
+	state   appState
+	device  vc.DeviceInfo
+	err     error
+	actions []string
+	cursor  int
+	//selected map[int]struct{}
+	help HelpModel
 }
 
 func InitialModel() MainModel {
 	return MainModel{
-		device:   vc.DeviceInfo{},
-		actions:  []string{"Manage Programs", "Manage Rooms", "View Logs"},
-		selected: make(map[int]struct{}),
-		help:     NewHelpModel(),
+		device:  vc.DeviceInfo{},
+		actions: []string{"Refresh", "Manage Programs", "Manage Rooms", "Device Information", "Devices", "Authorization", "Help"},
+		//selected: make(map[int]struct{}),
+		help: NewHelpModel(),
 	}
 }
 
@@ -67,25 +69,18 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 
 		//TODO: Change these to match the keys in the help.go file
-		// switch {
-		// case key.Matches(msg, Keys.Info):
-		// 	return NewDeviceInfo(), nil
-		// }
 
 		// THE MESSAGE IS A KEYPRESS
 		switch msg.String() {
 
-		// These keys should exit the program.
-		case "ctrl+c", "q":
+		case "ctrl+c", "q", "esc":
 			return m, tea.Quit
 
-		// The "up" and "k" keys move the cursor up
 		case "up", "k":
 			if m.cursor > 0 {
 				m.cursor--
 			}
 
-		// The "down" and "j" keys move the cursor down
 		case "down", "j":
 			if m.cursor < len(m.actions)-1 {
 				m.cursor++
@@ -94,22 +89,14 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "?", "":
 			return NewHelpModel(), nil
 
-		// The "enter" key and the spacebar (a literal space) toggle
-		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				delete(m.selected, m.cursor)
-			} else {
-				m.selected[m.cursor] = struct{}{}
-			}
+			return arrowSelected(&m)
 
-			//return NewHelpModel(), nil
 		case "i":
 			m.state = info
 			return NewDeviceInfo(), DeviceInfoCommand
 
-		case "r":
+		case "r", "ctrl+r":
 			m.state = rooms
 			return NewRoomsModel(), RoomCommand
 
@@ -133,7 +120,7 @@ func (m MainModel) View() string {
 		info := NewDeviceErrorTable(m.err)
 		s += BaseStyle.Render(info.Table.View()) + "\n"
 	} else {
-		info := NewDeviceTable(m.device)
+		info := HomeDeviceInfo(m.device)
 		s += BaseStyle.Render(info.Table.View()) + "\n"
 	}
 
@@ -141,24 +128,42 @@ func (m MainModel) View() string {
 	for i, choice := range m.actions {
 
 		// Is the cursor pointing at this choice?
-		cursor := " " // no cursor
+		cursor := GreyedOutText.Render("  "+" "+choice) + "\n"
 		if m.cursor == i {
-			cursor = ">" // cursor!
+			cursor = HighlightedText.Render("\u2192"+"  "+choice) + "\n"
 		}
+		s += cursor
 
-		// Is this choice selected?
-		checked := " " // not selected
-		if _, ok := m.selected[i]; ok {
-			checked = "x" // selected!
-		}
-
-		// Render the row
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 	}
 
 	// The footer
 	s += m.help.renderHelpInfo()
 	return s
+}
+
+func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
+
+	switch m.cursor {
+	case int(programs):
+		m.state = programs
+		return NewDeviceInfo(), DeviceInfoCommand
+
+	case int(rooms):
+		m.state = rooms
+		return NewRoomsModel(), RoomCommand
+
+	case int(info):
+		m.state = info
+		return NewDeviceInfo(), DeviceInfoCommand
+
+	case int(auth):
+	case int(devices):
+	case int(helpState):
+		return NewHelpModel(), nil
+
+	}
+
+	return InitialModel(), DeviceInfoCommand
 }
 
 func Run() {

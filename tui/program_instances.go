@@ -11,6 +11,7 @@ import (
 type RoomsTableModel struct {
 	table table.Model
 	rooms vc.ProgramInstanceLibrary
+	err   error
 	help  HelpModel
 	row   string
 }
@@ -28,27 +29,23 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case vc.ProgramInstanceLibrary:
+		m.rooms = msg
 		return NewRoomsTable(msg), nil
 
 	case error:
+		m.err = msg
 		return NewRoomsErrorTable(msg), nil
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "esc":
-			if m.table.Focused() {
-				m.table.Blur()
-			} else {
-				m.table.Focus()
-			}
+
+		case "q", "ctrl+c", "esc":
+			return InitialModel(), DeviceInfoCommand
 		case "down":
 			m.table.SetCursor(m.table.Cursor() + 1)
-
 		case "up":
 			m.table.SetCursor(m.table.Cursor() - 1)
 
-		case "q", "ctrl+c":
-			return InitialModel(), nil
 		case "enter":
 			return m, tea.Batch(
 				tea.Printf("Let's go to %s!", m.table.SelectedRow()[1]),
@@ -74,26 +71,6 @@ func (m RoomsTableModel) View() string {
 	return s
 }
 
-func getStatus(status string) string {
-	switch status {
-	case string(vc.Running):
-		return "\u2713"
-	case string(vc.Stopped):
-		return "\u274C"
-	case string(vc.Aborted):
-		return "\u1F643"
-	}
-
-	return "\u1F641"
-}
-
-func getState(status bool) string {
-	if status {
-		return "\u2713"
-	}
-	return "\u274C"
-}
-
 func NewRoomsTable(rooms vc.ProgramInstanceLibrary) RoomsTableModel {
 	columns := []table.Column{
 		{Title: "ID", Width: 20}, {Title: "NAME", Width: 20}, {Title: "NOTES", Width: 30}, {Title: "STATUS", Width: 8}, {Title: "DEBUG", Width: 8},
@@ -103,8 +80,7 @@ func NewRoomsTable(rooms vc.ProgramInstanceLibrary) RoomsTableModel {
 	rows := []table.Row{}
 
 	for key, room := range rooms {
-		status := getStatus(room.Status)
-		rows = append(rows, table.Row{key, room.Name, room.Notes, status, getState(room.DebuggingEnabled)})
+		rows = append(rows, table.Row{key, room.Name, room.Notes, GetStatus(room.Status), CheckMark(room.DebuggingEnabled)})
 	}
 
 	t := table.New(

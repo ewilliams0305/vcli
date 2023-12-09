@@ -23,6 +23,7 @@ func (m DeviceTableModel) Init() tea.Cmd {
 }
 
 func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 
@@ -34,20 +35,13 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "esc":
-			if m.Table.Focused() {
-				m.Table.Blur()
-			} else {
-				m.Table.Focus()
-			}
+		case "q", "ctrl+c", "esc":
+			return InitialModel(), DeviceInfoCommand
 		case "down":
 			m.Table.SetCursor(m.Table.Cursor() + 1)
-
 		case "up":
 			m.Table.SetCursor(m.Table.Cursor() - 1)
 
-		case "q", "ctrl+c":
-			return InitialModel(), nil
 		case "enter":
 			return m, tea.Batch(
 				tea.Printf("Let's go to %s!", m.Table.SelectedRow()[1]),
@@ -55,7 +49,6 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	m.row = m.Table.SelectedRow()[0] + ": " + m.Table.SelectedRow()[1]
-
 	m.Table, cmd = m.Table.Update(msg)
 	return m, cmd
 }
@@ -71,6 +64,59 @@ func (m DeviceTableModel) View() string {
 	s += m.Help.renderHelpInfo()
 
 	return s
+}
+
+func DefaultStyles() table.Styles {
+	return table.Styles{
+		Selected: lipgloss.NewStyle().Padding(0, 1),
+		Header:   lipgloss.NewStyle().Bold(true).Padding(0, 1),
+		Cell:     lipgloss.NewStyle().Padding(0, 1),
+	}
+}
+
+func HomeDeviceInfo(info vc.DeviceInfo) DeviceTableModel {
+	columns := []table.Column{
+		{Title: "SERVER INFOMATION", Width: 20},
+		{Title: "", Width: 50},
+	}
+
+	rows := []table.Row{
+		{"Hostname", info.Name},
+		{"MAC Address", info.MACAddress},
+		{"Build Date", info.BuildDate},
+		{"App Version", info.ApplicationVersion},
+		{"Firmware", info.Version},
+		{"Mono Version", info.MonoVersion},
+		{"Python Version", info.PythonVersion},
+		{"Manufacturer", info.Manufacturer},
+		{"Model", info.Model},
+	}
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(false),
+		table.WithStyles(DefaultStyles()),
+		table.WithHeight(9),
+	)
+
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(true)
+	// s.Selected = s.Selected.
+	// 	Foreground(lipgloss.Color("229")).
+	// 	Background(lipgloss.Color("57")).
+	// 	Bold(false)
+	t.SetStyles(s)
+
+	t.Blur()
+
+	return DeviceTableModel{
+		Table: t,
+		Help:  NewHelpModel()}
 }
 
 func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
@@ -95,6 +141,7 @@ func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(false),
+		table.WithStyles(DefaultStyles()),
 		table.WithHeight(9),
 	)
 
@@ -109,6 +156,8 @@ func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
 		Background(lipgloss.Color("57")).
 		Bold(false)
 	t.SetStyles(s)
+
+	t.Blur()
 
 	return DeviceTableModel{
 		Table: t,
