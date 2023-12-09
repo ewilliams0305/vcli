@@ -8,7 +8,7 @@ const (
 
 type RoomStatus string
 
-type RoomsResponse struct {
+type ProgramInstanceResponse struct {
 	Device DeviceProgramInstances `json:"Device"`
 }
 

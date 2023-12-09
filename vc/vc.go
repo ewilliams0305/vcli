@@ -27,6 +27,8 @@ const (
 type VirtualControl interface {
 	Config() *VirtualConfig
 	DeviceInfo() (DeviceInfo, VirtualControlError)
+	ProgramInstances() (ProgramInstanceLibrary, VirtualControlError)
+	ProgramLibrary() (ProgramsLibrary, VirtualControlError)
 }
 
 type vc struct {
@@ -85,4 +87,12 @@ func (v *vc) Config() *VirtualConfig {
 
 func (v *vc) DeviceInfo() (DeviceInfo, VirtualControlError) {
 	return getDeviceInfo(v)
+}
+
+func (v *vc) ProgramInstances() (ProgramInstanceLibrary, VirtualControlError) {
+	return getProgramInstances(v)
+}
+
+func (v *vc) ProgramLibrary() (ProgramsLibrary, VirtualControlError) {
+	return getProgramLibrary(v)
 }

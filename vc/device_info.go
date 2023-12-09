@@ -1,10 +1,10 @@
 package vc
 
 type DeviceInformationResponse struct {
-	Device Device `json:"Device"`
+	Device DeviceContext `json:"Device"`
 }
 
-type Device struct {
+type DeviceContext struct {
 	DeviceInfo DeviceInfo `json:"DeviceInfo"`
 }
 
@@ -22,4 +22,8 @@ type DeviceInfo struct {
 	Version            string `json:"Version"`
 	PythonVersion      string `json:"PythonVersion"`
 	MonoVersion        string `json:"MonoVersion"`
+}
+
+func emptyDeviceInfo() DeviceInfo {
+	return DeviceInfo{}
 }
