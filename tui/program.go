@@ -85,6 +85,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor++
 			}
 
+		case "?", "":
+			return NewHelpModel(), nil
+
 		// The "enter" key and the spacebar (a literal space) toggle
 		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
@@ -95,7 +98,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.selected[m.cursor] = struct{}{}
 			}
 
-			return NewHelpModel(), nil
+			//return NewHelpModel(), nil
 		case "i":
 			return NewDeviceTable(m.device), nil
 		}

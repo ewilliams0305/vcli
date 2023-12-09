@@ -16,6 +16,7 @@ type keyMap struct {
 	Down     key.Binding
 	Left     key.Binding
 	Right    key.Binding
+	GoHelp   key.Binding
 	Help     key.Binding
 	Quit     key.Binding
 	Programs key.Binding
@@ -28,15 +29,16 @@ type keyMap struct {
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Quit, k.Programs, k.Rooms, k.Devices, k.Auth, k.Info}
+	return []key.Binding{k.Help, k.Quit, k.Programs, k.Rooms, k.Devices, k.Auth, k.Info}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
 // key.Map interface.
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right}, // first column
-		{k.Help, k.Quit},                // second column
+		{k.Up, k.Down, k.Left, k.Right},          // first column
+		{k.Help, k.Quit, k.Info},                 // second column
+		{k.Rooms, k.Programs, k.Devices, k.Auth}, // second column
 	}
 }
 
@@ -60,6 +62,10 @@ var keys = keyMap{
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
+	),
+	GoHelp: key.NewBinding(
+		key.WithKeys("?"),
+		key.WithHelp("?", "Show help"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("q", "esc", "ctrl+c"),
@@ -115,18 +121,32 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Up):
-			m.lastKey = "↑"
+			m.lastKey = "↑\n\nMoves the menu up one item"
 		case key.Matches(msg, m.keys.Down):
-			m.lastKey = "↓"
+			m.lastKey = "↓\n\nMoves the menu down one item"
 		case key.Matches(msg, m.keys.Left):
-			m.lastKey = "←"
+			m.lastKey = "←\n\nMoves the menu to the left"
 		case key.Matches(msg, m.keys.Right):
-			m.lastKey = "→"
+			m.lastKey = "→\n\nMoves the menu to the right"
+
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, m.keys.Quit):
-			//m.quitting = true
+			m.quitting = true
 			return InitialModel(), nil
+		}
+
+		switch msg.String() {
+		case "p", "P":
+			m.lastKey = "ctrl+p\n\nView and manage loaded program files"
+		case "r", "R":
+			m.lastKey = "ctrl+r\n\nView and manage active rooms"
+		case "d", "D":
+			m.lastKey = "ctrl+d\n\nView device maps and communication status"
+		case "a", "A":
+			m.lastKey = "ctrl+a\n\nCreate and access API tokens"
+		case "i", "I":
+			m.lastKey = "ctrl+i\n\nRefresh and view device information"
 		}
 	}
 
@@ -134,16 +154,16 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m HelpModel) View() string {
-	// if m.quitting {
-	// 	return "Bye!\n"
-	// }
+	if m.quitting {
+		return "Bye!\n"
+	}
 
 	var status string
-	// if m.lastKey == "" {
-	// 	status = "Waiting for input..."
-	// } else {
-	// 	status = "You chose: " + m.inputStyle.Render(m.lastKey)
-	// }
+	if m.lastKey == "" {
+		status = "Enter key below for extended help information..."
+	} else {
+		status = "You chose: " + m.inputStyle.Render(m.lastKey)
+	}
 
 	helpView := m.help.View(m.keys)
 	height := 8 - strings.Count(status, "\n") - strings.Count(helpView, "\n")
