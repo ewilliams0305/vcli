@@ -11,7 +11,7 @@ const (
 )
 
 type VirtualControl interface {
- 
+ GetDeviceInfo() (DeviceInfo, error)
 }
 
 var client *http.Client = createClient()
