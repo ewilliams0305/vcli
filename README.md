@@ -31,7 +31,8 @@ the GO sdk. Download the SDK https://go.dev/dl/
 Once download you can build the /cmd/cli directory as an executable. 
 ### Windows
 To build on windows for your VC4 appliance you can use the go lan cross compiler.  Ensure the go compiler is installed on your machine and open a ![Static Badge](https://img.shields.io/badge/POWER-SHELL-yellow) terminal session.
-![Readme Image](./docs/info.gif)
+
+![Readme Image](./docs/ps_build.png)
 
 Change you directory to the repository root directory
 `cd ./`
