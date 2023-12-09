@@ -7,6 +7,7 @@ __      _______ _  _      _____ _      _____
    \  / | |____   | |   | |____| |____ _| |_ 
     \/   \_____|  |_|    \_____|______|_____|
 ```
+![Readme Image](./docs/info.gif)
 
 # VC4-CLI
 Ever found yourself connected to a VC4 appliance troublshooting the OS, working on the file system,

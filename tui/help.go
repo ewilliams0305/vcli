@@ -42,7 +42,7 @@ func (k keyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-var keys = keyMap{
+var Keys = keyMap{
 	Up: key.NewBinding(
 		key.WithKeys("up", "k"),
 		key.WithHelp("↑/k", "move up"),
@@ -103,7 +103,7 @@ type HelpModel struct {
 
 func NewHelpModel() HelpModel {
 	return HelpModel{
-		keys:       keys,
+		keys:       Keys,
 		help:       help.New(),
 		inputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("#FF75B7")),
 	}

@@ -66,7 +66,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 
-		// Cool, what was the actual key pressed?
+		//TODO: Change these to match the keys in the help.go file
+		// switch {
+		// case key.Matches(msg, Keys.Info):
+		// 	return NewDeviceInfo(), nil
+		// }
+
+		// THE MESSAGE IS A KEYPRESS
 		switch msg.String() {
 
 		// These keys should exit the program.
@@ -100,7 +106,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			//return NewHelpModel(), nil
 		case "i":
-			return NewDeviceTable(m.device), nil
+			return NewDeviceInfo(), DeviceInfoCommand
 		}
 
 	}
@@ -112,7 +118,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m MainModel) View() string {
 	// The header
-	s := Logo + "\n\n"
+	s := DisplayLogo()
 
 	if m.err != nil {
 		info := NewDeviceErrorTable(m.err)
