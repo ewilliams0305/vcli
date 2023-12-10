@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/ewilliams0305/offshoot?style=flat-square)](https://goreportcard.com/report/github.com/ewilliams0305/VC4-CLI)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ewilliams0305/offshoot?style=flat-square)](https://goreportcard.com/report/github.com/ewilliams0305/vcli)
 ```go
 __      _______ _  _      _____ _      _____ 
 \ \    / / ____| || |    / ____| |    |_   _|
@@ -9,7 +9,7 @@ __      _______ _  _      _____ _      _____
 ```
 ![Readme Image](./docs/info.gif)
 
-# VC4-CLI
+# vcli
 Ever found yourself connected to a VC4 appliance troublshooting the OS, working on the file system,
 or restarting services, only to find you can't perform actions on the actual VC4 service? Well now you can. 
 The VC4 CLI provides full control over the VC4 service from within the linux terminal allowing operators to:
@@ -44,18 +44,18 @@ Change your directory to the repository root directory
 
 Set the GOOS and GOARCH environment variables to ![Static Badge](https://img.shields.io/badge/LINUX-AMD64-red)
 
-![Static Badge](https://img.shields.io/badge/GOOS-yellow) `VC4-CLI> $env:GOOS = "linux"`
+![Static Badge](https://img.shields.io/badge/GOOS-yellow) `vcli> $env:GOOS = "linux"`
 
-![Static Badge](https://img.shields.io/badge/GOARCH-yellow) `VC4-CLI> $env:GOARCH = "amd64"`
+![Static Badge](https://img.shields.io/badge/GOARCH-yellow) `vcli> $env:GOARCH = "amd64"`
 
 Run the GO BUILD command to create a new executable in the bin directory that will run on your VC4 appliance. 
 The flags used will optimize the compilation and output the linux amd64 binary to the ./bin directory in the repository. 
 
-![Static Badge](https://img.shields.io/badge/GO-BUILD-red)`VC4-CLI> go build -tags netgo -installsuffix netgo -ldflags="-w -s" -o bin/ .\...`
+![Static Badge](https://img.shields.io/badge/GO-BUILD-red)`vcli> go build -tags netgo -installsuffix netgo -ldflags="-w -s" -o bin/ .\...`
 
 Once compiled you should have a file titled with the name of your repositories root directory with no file extension (remeber linux...).
 
-Copy this file to your VC4 appliance and execute `chmod +x ./VC4-CLI` to allow execution.  Finally run the application `./VC4-CLI`.  Of course you can name this file anything you like and add addtional flags to the go build command.
+Copy this file to your VC4 appliance and execute `chmod +x ./vcli` to allow execution.  Finally run the application `./vcli`.  Of course you can name this file anything you like and add addtional flags to the go build command.
 
 ![Static Badge](https://img.shields.io/badge/MAKE-ALL-red) *Of course you could just install make and type `make all`*
 
@@ -74,7 +74,7 @@ the VC4 webpage.
 When the application is started with a host and token flag the cli will target a remote server. I've also 
 this from one VC4 to another VC4. Lauch the app with flags;
 
-`./VC4-CLI -h 10.0.0.111 -t "TOKEN_HERE"`
+`./vcli -h 10.0.0.111 -t "TOKEN_HERE"`
 
 If the VC4 service is running you will instantly see the device information table loaded with data. 
 
