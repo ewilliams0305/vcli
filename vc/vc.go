@@ -27,12 +27,20 @@ const (
 type VirtualControl interface {
 	Config() *VirtualConfig
 	DeviceInfo() (DeviceInfo, VirtualControlError)
-	ProgramInstances() (ProgramInstanceLibrary, VirtualControlError)
 	ProgramLibrary() (ProgramsLibrary, VirtualControlError)
+ LicenseInfo() (LicenseInfo, VirtualControlError)
+ 
+ VcRoomApi
+}
 
-	StartRoom(id string) (bool, VirtualControlError)
+type VcRoomApi interface {
+ ProgramInstances() (ProgramInstanceLibrary, VirtualControlError)
+ StartRoom(id string) (bool, VirtualControlError)
 	StopRoom(id string) (bool, VirtualControlError)
 	RestartRoom(id string) (bool, VirtualControlError)
+ EditRoom(id string, name string, notes string) (ActionResult, VirtualControlError)
+ AddRoom(id string) (ActionResult, VirtualControlError)
+ DeleteRoom(id string) (ActionResult, VirtualControlError)  
 }
 
 type vc struct {
@@ -49,6 +57,11 @@ type VirtualConfig struct {
 	port     *int
 	hostname *string
 	token    *string
+}
+
+type ActionResponse struct {
+ Status string
+ Result string
 }
 
 // Create VC Clients
@@ -92,15 +105,12 @@ func (v *vc) Config() *VirtualConfig {
 func (v *vc) DeviceInfo() (DeviceInfo, VirtualControlError) {
 	return getDeviceInfo(v)
 }
-
 func (v *vc) ProgramInstances() (ProgramInstanceLibrary, VirtualControlError) {
 	return getProgramInstances(v)
 }
-
 func (v *vc) ProgramLibrary() (ProgramsLibrary, VirtualControlError) {
 	return getProgramLibrary(v)
 }
-
 func (v *vc) StartRoom(id string) (bool, VirtualControlError) {
 	return putRoomAction(v, id, "Start")
 }
