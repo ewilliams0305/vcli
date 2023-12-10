@@ -78,6 +78,11 @@ this from one VC4 to another VC4. Lauch the app with flags;
 
 If the VC4 service is running you will instantly see the device information table loaded with data. 
 
+# Controlling Rooms
+As of v0.0.1 users can start, stop, enable/disable debugging, and restart rooms.  CRUD operrations to create new rooms will be added at a later time.
+ 
+![Readme Image](./docs/rooms.gif)
+
 # Crestron REST API Reference 
 https://www.crestron.com/getmedia/29921c49-86df-488c-a63b-ab88620d7175/mg_pg_rest-api-crestron-virtual-control
 
