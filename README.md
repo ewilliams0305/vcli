@@ -57,6 +57,25 @@ Once compiled you should have a file titled with the name of your repositories r
 
 Copy this file to your VC4 appliance and execute `chmod +x ./VC4-CLI` to allow execution.  Finally run the application `./VC4-CLI`.  Of course you can name this file anything you like and add addtional flags to the go build command.
 
+# Launching
+Once compiled you can launch the application by executing the binary. 
+The application supports serveral command line argument flags
+
+`-host` or short `-h`
+
+`-token` or short `t`
+
+If no host flag is provided the application is assumed to be executing on the VC4 appliance and localhost will be used. 
+for local host operation NO TOKEN IS REQUIRED, yes, no token. This means the cli can be instantly used without every logging into
+the VC4 webpage. 
+
+When the application is started with a host and token flag the cli will target a remote server. I've also 
+this from one VC4 to another VC4. Lauch the app with flags;
+
+`./VC4-CLI -h 10.0.0.111 -t "TOKEN_HERE"`
+
+If the VC4 service is running you will instantly see the device information table loaded with data. 
+
 # Crestron REST API Reference 
 https://www.crestron.com/getmedia/29921c49-86df-488c-a63b-ab88620d7175/mg_pg_rest-api-crestron-virtual-control
 
