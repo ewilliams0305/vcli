@@ -11,35 +11,24 @@ import (
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
 // key.Map. It could also very easily be a map[string]key.Binding.
-type keyMap struct {
+type roomsKeyMap struct {
 	Up       key.Binding
 	Down     key.Binding
 	Left     key.Binding
 	Right    key.Binding
-	GoHelp   key.Binding
-	Help     key.Binding
 	Quit     key.Binding
-	Programs key.Binding
-	Rooms    key.Binding
-	Devices  key.Binding
-	Info     key.Binding
-	Auth     key.Binding
+	Start    key.Binding
+ Stop     key.Binding
+ Restart  key.Binding
+ Create   key.Binding
+ Delete   key.Binding
+ Edit     key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
-func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Help, k.Quit, k.Programs, k.Rooms, k.Devices, k.Auth, k.Info}
-}
-
-// FullHelp returns keybindings for the expanded help view. It's part of the
-// key.Map interface.
-func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right},          // first column
-		{k.Help, k.Quit, k.Info},                 // second column
-		{k.Rooms, k.Programs, k.Devices, k.Auth}, // second column
-	}
+func (k roomsKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Quit, k.Start, k.Stop, k.Delete}
 }
 
 var Keys = keyMap{
@@ -51,57 +40,31 @@ var Keys = keyMap{
 		key.WithKeys("down", "j"),
 		key.WithHelp("↓/j", "move down"),
 	),
-	Left: key.NewBinding(
-		key.WithKeys("left", "h"),
-		key.WithHelp("←/h", "move left"),
-	),
-	Right: key.NewBinding(
-		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "move right"),
-	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
-	),
-	GoHelp: key.NewBinding(
-		key.WithKeys("?"),
-		key.WithHelp("?", "Show help"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("q", "esc", "ctrl+c"),
 		key.WithHelp("q", "quit"),
 	),
-	Programs: key.NewBinding(
-		key.WithKeys("ctrl+p"),
-		key.WithHelp("ctrl+p", "programs"),
+	Start: key.NewBinding(
+		key.WithKeys("ctrl+s"),
+		key.WithHelp("ctrl+s", "star room"),
 	),
-	Rooms: key.NewBinding(
-		key.WithKeys("ctrl+r"),
-		key.WithHelp("ctrl+r", "rooms"),
-	),
-	Devices: key.NewBinding(
-		key.WithKeys("ctrl+d"),
-		key.WithHelp("ctrl+d", "devices"),
-	),
-	Auth: key.NewBinding(
-		key.WithKeys("ctrl+a"),
-		key.WithHelp("ctrl+a", "auth"),
-	),
-	Info: key.NewBinding(
-		key.WithKeys("ctrl+i"),
-		key.WithHelp("ctrl+i", "info"),
+ Start: key.NewBinding(
+		key.WithKeys("ctrl+s"),
+		key.WithHelp("ctrl+s", "stop room"),
 	),
 }
 
-type HelpModel struct {
-	keys       keyMap
+type RoomsHelpModel struct {
+	keys       roomsKeyMap
 	help       help.Model
 	inputStyle lipgloss.Style
-	lastKey    string
-	quitting   bool
 }
 
-func NewHelpModel() HelpModel {
+func NewRoomsHelpModel() HelpModel {
 	return HelpModel{
 		keys:       Keys,
 		help:       help.New(),
@@ -113,7 +76,7 @@ func (m HelpModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m RoomsHelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
@@ -152,11 +115,7 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m HelpModel) View() string {
-	if m.quitting {
-		return "Bye!\n"
-	}
-
+func (m RoomsHelpModel) View() string {
 	var status string
 	if m.lastKey == "" {
 		status = "Enter key below for extended help information..."
@@ -170,10 +129,7 @@ func (m HelpModel) View() string {
 	return "\n" + status + strings.Repeat("\n", height) + helpView
 }
 
-func (m HelpModel) renderHelpInfo() string {
-
+func (m RoomsHelpModel) renderHelpInfo() string {
 	helpView := m.help.View(m.keys)
-	//height := 8 - strings.Count(status, "\n") - strings.Count(helpView, "\n")
-
 	return "\n" + helpView
 }
