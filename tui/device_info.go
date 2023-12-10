@@ -9,13 +9,17 @@ import (
 )
 
 type DeviceTableModel struct {
-	Table table.Model
-	Help  HelpModel
-	row   string
+	Table         table.Model
+	Help          HelpModel
+	row           string
+	width, height int
 }
 
-func NewDeviceInfo() DeviceTableModel {
-	return DeviceTableModel{}
+func NewDeviceInfo(width, height int) DeviceTableModel {
+	return DeviceTableModel{
+		width:  width,
+		height: height,
+	}
 }
 
 func (m DeviceTableModel) Init() tea.Cmd {
@@ -27,16 +31,21 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 
+	case tea.WindowSizeMsg:
+		m.width, m.height = msg.Width, msg.Height
+		m.Table, cmd = m.Table.Update(msg)
+		return m, cmd
+
 	case vc.DeviceInfo:
-		return NewDeviceTable(msg), nil
+		return NewDeviceTable(msg, m.width), nil
 
 	case error:
-		return NewDeviceErrorTable(msg), nil
+		return NewDeviceErrorTable(msg, m.width), nil
 
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c", "esc":
-			return InitialModel(), DeviceInfoCommand
+			return program, tea.Batch(tick, DeviceInfoCommand)
 		case "down":
 			m.Table.SetCursor(m.Table.Cursor() + 1)
 		case "up":
@@ -54,7 +63,7 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m DeviceTableModel) View() string {
-	s := DisplayLogo(76)
+	s := DisplayLogo(m.width)
 	s += BaseStyle.Render(m.Table.View()) + "\n\n"
 
 	if len(m.row) > 0 {
@@ -74,10 +83,10 @@ func DefaultStyles() table.Styles {
 	}
 }
 
-func HomeDeviceInfo(info vc.DeviceInfo) DeviceTableModel {
+func HomeDeviceInfo(info vc.DeviceInfo, width int) DeviceTableModel {
 	columns := []table.Column{
-		{Title: "SERVER INFOMATION", Width: 20},
-		{Title: "", Width: 50},
+		{Title: "SERVER INFOMATION", Width: 30},
+		{Title: "", Width: width - 36},
 	}
 
 	rows := []table.Row{
@@ -98,6 +107,7 @@ func HomeDeviceInfo(info vc.DeviceInfo) DeviceTableModel {
 		table.WithFocused(false),
 		table.WithStyles(DefaultStyles()),
 		table.WithHeight(9),
+		table.WithWidth(width),
 	)
 
 	s := table.DefaultStyles()
@@ -105,6 +115,7 @@ func HomeDeviceInfo(info vc.DeviceInfo) DeviceTableModel {
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240")).
 		BorderBottom(true).
+		//Width(width).
 		Bold(true)
 	s.Selected = s.Selected.
 		Foreground(lipgloss.Color("240")).
@@ -119,13 +130,14 @@ func HomeDeviceInfo(info vc.DeviceInfo) DeviceTableModel {
 
 	return DeviceTableModel{
 		Table: t,
-		Help:  NewHelpModel()}
+		Help:  NewHelpModel(),
+		width: width}
 }
 
-func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
+func NewDeviceTable(info vc.DeviceInfo, width int) DeviceTableModel {
 	columns := []table.Column{
-		{Title: "SERVER INFOMATION", Width: 20},
-		{Title: "", Width: 50},
+		{Title: "SERVER INFOMATION", Width: 30},
+		{Title: "", Width: width - 36},
 	}
 
 	rows := []table.Row{
@@ -164,13 +176,14 @@ func NewDeviceTable(info vc.DeviceInfo) DeviceTableModel {
 
 	return DeviceTableModel{
 		Table: t,
-		Help:  NewHelpModel()}
+		Help:  NewHelpModel(),
+		width: width}
 }
 
-func NewDeviceErrorTable(msg vc.VirtualControlError) DeviceTableModel {
+func NewDeviceErrorTable(msg vc.VirtualControlError, width int) DeviceTableModel {
 	columns := []table.Column{
-		{Title: "SERVER ERROR", Width: 20},
-		{Title: "", Width: 100},
+		{Title: "SERVER ERROR", Width: 30},
+		{Title: "", Width: width - 36},
 	}
 
 	rows := []table.Row{
@@ -200,7 +213,11 @@ func NewDeviceErrorTable(msg vc.VirtualControlError) DeviceTableModel {
 		Bold(true).Italic(true)
 	t.SetStyles(s)
 
-	return DeviceTableModel{Table: t, Help: NewHelpModel()}
+	return DeviceTableModel{
+		Table: t,
+		Help:  NewHelpModel(),
+		width: width,
+	}
 }
 
 func DeviceInfoCommand() tea.Msg {

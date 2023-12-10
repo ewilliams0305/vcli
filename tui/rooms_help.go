@@ -103,7 +103,7 @@ func (m RoomsHelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, m.keys.Quit):
-			return InitialModel(), DeviceInfoCommand
+			return InitialRoomsModel(200, 200), RoomCommand
 		}
 
 		// switch msg.String() {

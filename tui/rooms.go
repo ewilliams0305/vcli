@@ -12,23 +12,24 @@ import (
 )
 
 type RoomsTableModel struct {
-	table        table.Model
-	rooms        vc.Rooms
-	selectedRoom vc.Room
-	err          error
-	help         RoomsHelpModel
-	busy         busy
-	cursor       int
-	width        int
-	height       int
+	table         table.Model
+	rooms         vc.Rooms
+	selectedRoom  vc.Room
+	err           error
+	help          RoomsHelpModel
+	busy          busy
+	cursor        int
+	width, height int
 }
 
-func InitialRoomsModel() *RoomsTableModel {
+func InitialRoomsModel(width, height int) *RoomsTableModel {
 	return &RoomsTableModel{
 		rooms:        vc.Rooms{},
 		selectedRoom: vc.Room{},
 		cursor:       0,
 		help:         NewRoomsHelpModel(),
+		width:        width,
+		height:       height,
 	}
 }
 
@@ -53,7 +54,8 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		return m, nil
+		m.table, cmd = m.table.Update(msg)
+		return m, cmd
 
 	case int:
 		m.cursor = msg
@@ -80,29 +82,37 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "q", "ctrl+c", "esc":
-			return InitialModel(), DeviceInfoCommand
+			return ReturnToHomeModel(rooms), tea.Batch(tick, DeviceInfoCommand)
 		case "down":
-			m.table.SetCursor(m.table.Cursor() + 1)
-			return m, cmdCursor(m.table.Cursor())
+			if m.err == nil {
+				m.table.SetCursor(m.table.Cursor() + 1)
+				return m, cmdCursor(m.table.Cursor())
+			}
 		case "up":
-			m.table.SetCursor(m.table.Cursor() - 1)
-			return m, cmdCursor(m.table.Cursor())
+			if m.err == nil {
+				m.table.SetCursor(m.table.Cursor() - 1)
+				return m, cmdCursor(m.table.Cursor())
+			}
 
 		case "ctrl+s":
-			if m.selectedRoom.Status == string(vc.Running) {
-				return m, cmdRoomStop(m.selectedRoom.ID)
-			} else if m.selectedRoom.Status == string(vc.Starting) {
-				return m, cmdRoomStop(m.selectedRoom.ID)
-			} else if m.selectedRoom.Status == string(vc.Stopped) {
-				return m, cmdRoomStart(m.selectedRoom.ID)
-			} else if m.selectedRoom.Status == string(vc.Stopping) {
-				return m, cmdRoomStart(m.selectedRoom.ID)
-			} else if m.selectedRoom.Status == string(vc.Aborted) {
-				return m, cmdRoomStart(m.selectedRoom.ID)
+			if m.err == nil {
+				if m.selectedRoom.Status == string(vc.Running) {
+					return m, cmdRoomStop(m.selectedRoom.ID)
+				} else if m.selectedRoom.Status == string(vc.Starting) {
+					return m, cmdRoomStop(m.selectedRoom.ID)
+				} else if m.selectedRoom.Status == string(vc.Stopped) {
+					return m, cmdRoomStart(m.selectedRoom.ID)
+				} else if m.selectedRoom.Status == string(vc.Stopping) {
+					return m, cmdRoomStart(m.selectedRoom.ID)
+				} else if m.selectedRoom.Status == string(vc.Aborted) {
+					return m, cmdRoomStart(m.selectedRoom.ID)
+				}
 			}
 
 		case "ctrl+r":
-			return m, cmdRoomRestart(m.selectedRoom.ID)
+			if m.err == nil {
+				return m, cmdRoomRestart(m.selectedRoom.ID)
+			}
 
 		}
 	}
@@ -124,54 +134,6 @@ func (m RoomsTableModel) View() string {
 	s += m.help.renderHelpInfo()
 	return s
 }
-
-// func NewRoomsTable(rooms vc.Rooms, cursor int) RoomsTableModel {
-// 	columns := []table.Column{
-// 		{Title: "ID", Width: 20},
-// 		{Title: "NAME", Width: 20},
-// 		{Title: "PROGRAM", Width: 30},
-// 		{Title: "NOTES", Width: 30},
-// 		{Title: "TYPE", Width: 8},
-// 		{Title: "STATUS", Width: 8},
-// 		{Title: "DEBUG", Width: 8},
-// 	}
-
-// 	rows := []table.Row{}
-
-// 	for _, room := range rooms {
-// 		rows = append(rows, table.Row{room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
-// 	}
-
-// 	t := table.New(
-// 		table.WithColumns(columns),
-// 		table.WithRows(rows),
-// 		table.WithFocused(false),
-// 		table.WithHeight(9),
-// 	)
-
-// 	s := table.DefaultStyles()
-// 	s.Header = s.Header.
-// 		BorderStyle(lipgloss.NormalBorder()).
-// 		BorderForeground(lipgloss.Color("240")).
-// 		BorderBottom(true).
-// 		Background(lipgloss.Color(AccentColor)).
-// 		Foreground(lipgloss.Color(AccentColor)).
-// 		Bold(true)
-// 	s.Selected = s.Selected.
-// 		Foreground(lipgloss.Color("229")).
-// 		Background(lipgloss.Color(AccentColor)).
-// 		Bold(false)
-// 	t.SetStyles(s)
-
-// 	t.SetCursor(cursor)
-
-// 	return RoomsTableModel{
-// 		table:        t,
-// 		rooms:        rooms,
-// 		selectedRoom: rooms[cursor],
-// 		help:         NewRoomsHelpModel(),
-// 	}
-// }
 
 func newRoomsTable(rooms vc.Rooms, cursor int) table.Model {
 	columns := []table.Column{
@@ -248,7 +210,7 @@ func NewRoomsErrorTable(msg vc.VirtualControlError) RoomsTableModel {
 		Bold(true).Italic(true)
 	t.SetStyles(s)
 
-	return RoomsTableModel{table: t, help: NewRoomsHelpModel()}
+	return RoomsTableModel{table: t, err: msg, help: NewRoomsHelpModel()}
 }
 
 func RoomCommand() tea.Msg {

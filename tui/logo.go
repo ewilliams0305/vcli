@@ -1,19 +1,18 @@
 package tui
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/lipgloss"
 )
 
 const (
 	Logo string = `
-__      _______ _  _      _____ _      _____   
-\ \    / / ____| || |    / ____| |    |_   _|  
- \ \  / / |    | || |_  | |    | |      | |    
-  \ \/ /| |    |__   _| | |    | |      | |    
-   \  / | |____   | |   | |____| |____ _| |_   
-    \/   \_____|  |_|    \_____|______|_____|  
+__      _______ _  _      _____ _      _____ 
+\ \    / / ____| || |    / ____| |    |_   _|
+ \ \  / / |    | || |_  | |    | |      | |  
+  \ \/ /| |    |__   _| | |    | |      | |  
+   \  / | |____   | |   | |____| |____ _| |_ 
+    \/   \_____|  |_|    \_____|______|_____|
+
 `
 )
 
@@ -30,6 +29,6 @@ func DisplayLogo(width int) string {
 		Align(lipgloss.Center)
 	//Height(20)
 
-	box := fmt.Sprintf("%s\n", Logo)
-	return LogoStyle.Render(box) + "\n\n"
+	//box := fmt.Sprintf("%s\n", logo())
+	return LogoStyle.Render(Logo) + "\n\n"
 }

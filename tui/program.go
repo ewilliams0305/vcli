@@ -3,8 +3,10 @@ package tui
 import (
 	"fmt"
 	"os"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/term"
 
 	vc "github.com/ewilliams0305/VC4-CLI/vc"
 )
@@ -14,9 +16,10 @@ var server vc.VirtualControl
 type appState int
 
 const (
+	initializing appState = iota
 	// HOME VIEW, Displays dev info and main menu with text input for commands
 	// ALL otger const states will make our main menu
-	home appState = 0
+	home appState = 10
 	// PROGAM VIEW, displays all programs loaded
 	programs appState = 1
 	// ROOM VIEW, display all program instances
@@ -31,38 +34,67 @@ const (
 	helpState appState = 6
 )
 
+var program *MainModel
+
 type MainModel struct {
-	state   appState
-	device  vc.DeviceInfo
-	err     error
-	actions []string
-	cursor  int
-	//selected map[int]struct{}
-	help HelpModel
+	state         appState
+	device        vc.DeviceInfo
+	err           error
+	actions       []string
+	cursor        int
+	help          HelpModel
+	width, height int
 }
 
 func InitialModel() MainModel {
-	return MainModel{
+
+	w, h, _ := term.GetSize(int(os.Stdout.Fd()))
+	program = &MainModel{
 		device:  vc.DeviceInfo{},
 		actions: []string{"Refresh", "Manage Programs", "Manage Rooms", "Device Information", "Devices", "Authorization", "Help"},
-		//selected: make(map[int]struct{}),
-		help: NewHelpModel(),
+		help:    NewHelpModel(),
+		width:   w,
+		height:  h,
 	}
+
+	return *program
+}
+
+func ReturnToHomeModel(state appState) MainModel {
+
+	w, h, _ := term.GetSize(int(os.Stdout.Fd()))
+
+	program.width = w
+	program.height = h
+	program.state = state
+	program.cursor = int(state)
+
+	return *program
 }
 
 func (m MainModel) Init() tea.Cmd {
-	return DeviceInfoCommand
+	return tea.Batch(tick, DeviceInfoCommand)
 }
 
 func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
-	case *vc.DeviceInfo:
-		m.device = *msg
+	case tickMsg:
+		w, h, _ := term.GetSize(int(os.Stdout.Fd()))
+		if w != m.width || h != m.height {
+			m.updateSize(w, h)
+		}
+		return m, tea.Batch(tick, func() tea.Msg { return tea.WindowSizeMsg{Width: w, Height: h} })
+
+	case tea.WindowSizeMsg:
+		m.width, m.height = msg.Width, msg.Height
+		m.state = home
+		return m, nil
 
 	case vc.DeviceInfo:
 		m.device = msg
-
+		m.state = home
+		return m, nil
 	case error:
 		m.err = msg
 
@@ -94,15 +126,15 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "i":
 			m.state = info
-			return NewDeviceInfo(), DeviceInfoCommand
+			return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
 
 		case "r", "ctrl+r":
 			m.state = rooms
-			return InitialRoomsModel(), RoomCommand
+			return InitialRoomsModel(m.width, m.height), RoomCommand
 
 		case "p":
 			m.state = programs
-			return NewDeviceInfo(), DeviceInfoCommand
+			return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
 		}
 
 	}
@@ -113,14 +145,20 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MainModel) View() string {
-	// The header
-	s := DisplayLogo(76)
+	var s string
+
+	if m.state == initializing {
+		s = RenderMessageBox(1000).Render("Initializing application...")
+		return s
+	}
+
+	s = DisplayLogo(m.width)
 
 	if m.err != nil {
-		info := NewDeviceErrorTable(m.err)
+		info := NewDeviceErrorTable(m.err, m.width)
 		s += BaseStyle.Render(info.Table.View()) + "\n"
 	} else {
-		info := HomeDeviceInfo(m.device)
+		info := HomeDeviceInfo(m.device, m.width)
 		s += BaseStyle.Render(info.Table.View()) + "\n"
 	}
 
@@ -146,15 +184,15 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 	switch m.cursor {
 	case int(programs):
 		m.state = programs
-		return NewDeviceInfo(), DeviceInfoCommand
+		return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
 
 	case int(rooms):
 		m.state = rooms
-		return InitialRoomsModel(), RoomCommand
+		return InitialRoomsModel(m.width, m.height), RoomCommand
 
 	case int(info):
 		m.state = info
-		return NewDeviceInfo(), DeviceInfoCommand
+		return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
 
 	case int(auth):
 	case int(devices):
@@ -163,7 +201,7 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 
 	}
 
-	return InitialModel(), DeviceInfoCommand
+	return program, nil
 }
 
 func Run() {
@@ -184,4 +222,27 @@ func initServer() vc.VirtualControl {
 		return vc.NewRemoteVC(Hostname, Token)
 	}
 	return vc.NewLocalVC()
+}
+
+/********************************************************
+*
+* VIEWPORT BUGGY WINDOW SIZE HACK
+*
+*********************************************************/
+
+// Pointless type to trigger the update function
+type tickMsg int
+
+// Updates the entire view if the size changed
+func (m *MainModel) updateSize(w, h int) {
+	m.width = w
+	m.width = h
+
+	m.View()
+}
+
+// Sends a message back to the update function to start the tick over again.
+func tick() tea.Msg {
+	time.Sleep(time.Second + 1)
+	return tickMsg(1)
 }
