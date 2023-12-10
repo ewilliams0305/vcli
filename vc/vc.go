@@ -26,10 +26,13 @@ const (
 // -- header  "Authorization: [Token]"
 type VirtualControl interface {
 	Config() *VirtualConfig
-	DeviceInfo() (DeviceInfo, VirtualControlError)
+
+	VcProgramApi
+	VcInfoApi
+	VcRoomApi
 }
 
-type vc struct {
+type VC struct {
 	client   *http.Client
 	url      string
 	http     bool
@@ -46,9 +49,8 @@ type VirtualConfig struct {
 }
 
 // Create VC Clients
-
 func NewLocalVC() VirtualControl {
-	return &vc{
+	return &VC{
 		client:   createLocalClient(),
 		url:      LOCALHOSTURL,
 		http:     true,
@@ -59,7 +61,7 @@ func NewLocalVC() VirtualControl {
 }
 
 func NewRemoteVC(host string, token string) VirtualControl {
-	return &vc{
+	return &VC{
 		client:   createRemoteClient(token),
 		url:      baseUrl(host),
 		http:     false,
@@ -74,7 +76,7 @@ func baseUrl(host string) string {
 }
 
 // Implement the VC Interface
-func (v *vc) Config() *VirtualConfig {
+func (v *VC) Config() *VirtualConfig {
 	return &VirtualConfig{
 		http:     v.http,
 		port:     &v.port,
@@ -83,6 +85,41 @@ func (v *vc) Config() *VirtualConfig {
 	}
 }
 
-func (v *vc) DeviceInfo() (DeviceInfo, VirtualControlError) {
-	return getDeviceInfo(v)
+type ActionResponse struct {
+	Actions []ActionData `json:"Actions"`
+}
+
+type ActionData struct {
+	Operation    string                 `json:"Operation"`
+	Results      []ActionResponseResult `json:"Results"`
+	TargetObject string                 `json:"TargetObject"`
+	Version      string                 `json:"Version"`
+}
+
+type ActionResponseResult struct {
+	Path       string         `json:"path"`
+	Object     ActionRoomData `json:"object"`
+	StatusInfo string         `json:"StatusInfo"`
+	StatusID   int64          `json:"StatusId"`
+}
+
+type ActionRoomData struct {
+	ID                  int64  `json:"id"`
+	ProgramInstanceID   string `json:"programInstanceId"`
+	ProgramLibraryID    int64  `json:"ProgramLibraryId"`
+	UserFile            string `json:"UserFile"`
+	Status              string `json:"Status"`
+	Name                string `json:"Name"`
+	Level               string `json:"level"`
+	AddressSetsLocation bool   `json:"AddressSetsLocation"`
+	Location            string `json:"Location"`
+	Longitude           string `json:"Longitude"`
+	Latitude            string `json:"Latitude"`
+	TimeZone            string `json:"TimeZone"`
+	ConfigurationLink   string `json:"ConfigurationLink"`
+	ProcessID           string `json:"ProcessId"`
+	XpanelURL           string `json:"XpanelUrl"`
+	ProgramSlotID       int64  `json:"ProgramSlotId"`
+	Notes               string `json:"Notes"`
+	DebuggingEnabled    bool   `json:"DebuggingEnabled"`
 }
