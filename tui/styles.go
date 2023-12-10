@@ -5,6 +5,13 @@ import (
 	"github.com/ewilliams0305/VC4-CLI/vc"
 )
 
+const (
+	PrimaryColor string = "#3F51B5"
+	PrimaryLight string = "#C5CAE9"
+	PrimaryDark  string = "#303F9F"
+	AccentColor  string = "#00796B"
+)
+
 var BaseStyle = lipgloss.NewStyle().
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderForeground(lipgloss.Color("240"))
@@ -30,8 +37,8 @@ var GreyedOutText = lipgloss.NewStyle().
 func RenderMessageBox(width int) lipgloss.Style {
 	return lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#7D56F4")).
+		Foreground(lipgloss.Color(PrimaryLight)).
+		Background(lipgloss.Color(PrimaryDark)).
 		PaddingTop(1).
 		PaddingLeft(1).
 		MarginBottom(1).

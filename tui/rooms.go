@@ -125,51 +125,53 @@ func (m RoomsTableModel) View() string {
 	return s
 }
 
-func NewRoomsTable(rooms vc.Rooms, cursor int) RoomsTableModel {
-	columns := []table.Column{
-		{Title: "ID", Width: 20},
-		{Title: "NAME", Width: 20},
-		{Title: "PROGRAM", Width: 30},
-		{Title: "NOTES", Width: 30},
-		{Title: "TYPE", Width: 8},
-		{Title: "STATUS", Width: 8},
-		{Title: "DEBUG", Width: 8},
-	}
+// func NewRoomsTable(rooms vc.Rooms, cursor int) RoomsTableModel {
+// 	columns := []table.Column{
+// 		{Title: "ID", Width: 20},
+// 		{Title: "NAME", Width: 20},
+// 		{Title: "PROGRAM", Width: 30},
+// 		{Title: "NOTES", Width: 30},
+// 		{Title: "TYPE", Width: 8},
+// 		{Title: "STATUS", Width: 8},
+// 		{Title: "DEBUG", Width: 8},
+// 	}
 
-	rows := []table.Row{}
+// 	rows := []table.Row{}
 
-	for _, room := range rooms {
-		rows = append(rows, table.Row{room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
-	}
+// 	for _, room := range rooms {
+// 		rows = append(rows, table.Row{room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
+// 	}
 
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(false),
-		table.WithHeight(9),
-	)
+// 	t := table.New(
+// 		table.WithColumns(columns),
+// 		table.WithRows(rows),
+// 		table.WithFocused(false),
+// 		table.WithHeight(9),
+// 	)
 
-	s := table.DefaultStyles()
-	s.Header = s.Header.
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("240")).
-		BorderBottom(true).
-		Bold(true)
-	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
-		Bold(false)
-	t.SetStyles(s)
+// 	s := table.DefaultStyles()
+// 	s.Header = s.Header.
+// 		BorderStyle(lipgloss.NormalBorder()).
+// 		BorderForeground(lipgloss.Color("240")).
+// 		BorderBottom(true).
+// 		Background(lipgloss.Color(AccentColor)).
+// 		Foreground(lipgloss.Color(AccentColor)).
+// 		Bold(true)
+// 	s.Selected = s.Selected.
+// 		Foreground(lipgloss.Color("229")).
+// 		Background(lipgloss.Color(AccentColor)).
+// 		Bold(false)
+// 	t.SetStyles(s)
 
-	t.SetCursor(cursor)
+// 	t.SetCursor(cursor)
 
-	return RoomsTableModel{
-		table:        t,
-		rooms:        rooms,
-		selectedRoom: rooms[cursor],
-		help:         NewRoomsHelpModel(),
-	}
-}
+// 	return RoomsTableModel{
+// 		table:        t,
+// 		rooms:        rooms,
+// 		selectedRoom: rooms[cursor],
+// 		help:         NewRoomsHelpModel(),
+// 	}
+// }
 
 func newRoomsTable(rooms vc.Rooms, cursor int) table.Model {
 	columns := []table.Column{
@@ -200,10 +202,11 @@ func newRoomsTable(rooms vc.Rooms, cursor int) table.Model {
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240")).
 		BorderBottom(true).
+		Foreground(lipgloss.Color(AccentColor)).
 		Bold(true)
 	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
+		Foreground(lipgloss.Color(PrimaryLight)).
+		Background(lipgloss.Color(PrimaryDark)).
 		Bold(false)
 	t.SetStyles(s)
 
