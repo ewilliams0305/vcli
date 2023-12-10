@@ -1,5 +1,29 @@
 package vc
 
+const (
+	DEVICEINFO = "DeviceInfo"
+)
+
+type VcInfoApi interface {
+	DeviceInfo() (DeviceInfo, VirtualControlError)
+}
+
+func (v *VC) DeviceInfo() (DeviceInfo, VirtualControlError) {
+	return getDeviceInfo(v)
+}
+
+func getDeviceInfo(vc *VC) (DeviceInfo, VirtualControlError) {
+
+	var deviceData DeviceInformationResponse
+	err := vc.getBody(DEVICEINFO, &deviceData)
+
+	if err != nil {
+		return emptyDeviceInfo(), NewServerError(500, err)
+	}
+
+	return deviceData.Device.DeviceInfo, nil
+}
+
 type DeviceInformationResponse struct {
 	Device DeviceContext `json:"Device"`
 }

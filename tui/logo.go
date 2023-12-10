@@ -13,16 +13,27 @@ __      _______ _  _      _____ _      _____
 `
 )
 
-var LogoStyle = lipgloss.NewStyle().
-	Bold(true).
-	Foreground(lipgloss.Color("#FAFAFA")).
-	Background(lipgloss.Color("#7D56F4")).
-	PaddingTop(1).
-	PaddingLeft(1).
-	MarginBottom(1).
-	Width(76).Align(lipgloss.Center).
-	Height(3)
+// var LogoStyle = lipgloss.NewStyle().
+// 	Bold(true).
+// 	Foreground(lipgloss.Color("#FAFAFA")).
+// 	Background(lipgloss.Color("#7D56F4")).
+// 	PaddingTop(1).
+// 	PaddingLeft(1).
+// 	MarginBottom(1).
+// 	Width(76).Align(lipgloss.Center).
+// 	Height(3)
 
-func DisplayLogo() string {
+func DisplayLogo(width int) string {
+
+	var LogoStyle = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FAFAFA")).
+		Background(lipgloss.Color("#7D56F4")).
+		PaddingTop(1).
+		PaddingLeft(1).
+		MarginBottom(1).
+		Width(width).Align(lipgloss.Center).
+		Height(3)
+
 	return LogoStyle.Render(Logo) + "\n\n"
 }

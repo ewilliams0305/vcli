@@ -2,6 +2,9 @@ package vc
 
 import (
 	"crypto/tls"
+	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"time"
 )
@@ -75,4 +78,29 @@ func (t *headerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	return t.transport.RoundTrip(req)
+}
+
+func (vc *VC) getBody(url string, result any) (err VirtualControlError) {
+
+	resp, err := vc.client.Get(vc.url + url)
+	if err != nil {
+		return NewServerError(500, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return NewServerError(resp.StatusCode, errors.New("FAILED TO GET DEVICE INFO"))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return NewServerError(resp.StatusCode, err)
+	}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return NewServerError(resp.StatusCode, err)
+	}
+
+	return nil
 }

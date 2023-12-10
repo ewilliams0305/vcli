@@ -27,16 +27,32 @@ var GreyedOutText = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("#555555")).
 	Bold(false)
 
+func RenderMessageBox(width int) lipgloss.Style {
+	return lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FAFAFA")).
+		Background(lipgloss.Color("#7D56F4")).
+		PaddingTop(1).
+		PaddingLeft(1).
+		MarginBottom(1).
+		Width(width).Align(lipgloss.Top).
+		Height(3)
+}
+
 func GetStatus(status string) string {
 	switch status {
+	case string(vc.Starting):
+		return "💨"
 	case string(vc.Running):
-		return "\u2713"
+		return "🚀"
+	case string(vc.Stopping):
+		return "🛑"
 	case string(vc.Stopped):
-		return "\u274C"
+		return "🤚"
 	case string(vc.Aborted):
-		return "\u1F643"
+		return "😈"
 	}
-	return "\u1F641"
+	return "🤚"
 }
 
 func CheckMark(status bool) string {
@@ -47,5 +63,5 @@ func CheckMark(status bool) string {
 }
 
 func GetIcons() string {
-  return "🎏🍔🍒🍥🎮📦🦁🐶🐸🍕🥐🧲";
+	return "🎏🍔🍒🍥🎮📦🦁🐶🐸🍕🥐🧲"
 }

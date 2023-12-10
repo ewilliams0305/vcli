@@ -1,5 +1,28 @@
 package vc
 
+const (
+	PROGRAMLIBRARY = "ProgramLibrary"
+)
+
+type VcProgramApi interface {
+	ProgramLibrary() (ProgramsLibrary, VirtualControlError)
+}
+
+func (v *VC) ProgramLibrary() (ProgramsLibrary, VirtualControlError) {
+	return getProgramLibrary(v)
+}
+
+func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
+
+	var results ProgramLibraryResponse
+	err := vc.getBody(PROGRAMLIBRARY, &results)
+
+	if err != nil {
+		return ProgramsLibrary{}, NewServerError(500, err)
+	}
+	return results.Device.Programs.ProgramLibrary, nil
+}
+
 type ProgramLibraryResponse struct {
 	Device LibraryContext `json:"Device"`
 }

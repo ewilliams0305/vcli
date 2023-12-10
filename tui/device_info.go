@@ -54,7 +54,7 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m DeviceTableModel) View() string {
-	s := DisplayLogo()
+	s := DisplayLogo(76)
 	s += BaseStyle.Render(m.Table.View()) + "\n\n"
 
 	if len(m.row) > 0 {

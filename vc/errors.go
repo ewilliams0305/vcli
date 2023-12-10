@@ -17,7 +17,7 @@ func (e *ServerError) Error() string {
 	return fmt.Sprintf("%d | %s", e.code, e.err)
 }
 
-func newServerError(code int, err error) *ServerError {
+func NewServerError(code int, err error) *ServerError {
 	return &ServerError{
 		err:  err,
 		code: code,
@@ -33,6 +33,6 @@ func (code HttpResponseError) Error() string {
 	return fmt.Sprintf("INVALID RESPONSE CODE RETURNED FROM SERVER %d", code)
 }
 
-func newResponseError(code int) *HttpResponseError {
+func NewResponseError(code int) *HttpResponseError {
 	return &HttpResponseError{StatusCode: code}
 }

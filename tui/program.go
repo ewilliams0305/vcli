@@ -98,7 +98,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "r", "ctrl+r":
 			m.state = rooms
-			return NewRoomsModel(), RoomCommand
+			return InitialRoomsModel(), RoomCommand
 
 		case "p":
 			m.state = programs
@@ -114,7 +114,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m MainModel) View() string {
 	// The header
-	s := DisplayLogo()
+	s := DisplayLogo(76)
 
 	if m.err != nil {
 		info := NewDeviceErrorTable(m.err)
@@ -150,7 +150,7 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 
 	case int(rooms):
 		m.state = rooms
-		return NewRoomsModel(), RoomCommand
+		return InitialRoomsModel(), RoomCommand
 
 	case int(info):
 		m.state = info
