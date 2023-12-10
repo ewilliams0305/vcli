@@ -57,6 +57,8 @@ Once compiled you should have a file titled with the name of your repositories r
 
 Copy this file to your VC4 appliance and execute `chmod +x ./VC4-CLI` to allow execution.  Finally run the application `./VC4-CLI`.  Of course you can name this file anything you like and add addtional flags to the go build command.
 
+![Static Badge](https://img.shields.io/badge/MAKE-ALL-red) *Of course you could just install make and type `make all`*
+
 # Launching
 Once compiled you can launch the application by executing the binary. 
 The application supports serveral command line argument flags
