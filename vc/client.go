@@ -52,7 +52,9 @@ func createRemoteClient(token string) *http.Client {
 
 	client.Transport = &headerTransport{
 		transport: client.Transport,
-		header:    http.Header{"xContent-Type": []string{"application/json"}, "Authorization": []string{token}},
+		header: http.Header{
+			//"xContent-Type": []string{"application/json"},
+			"Authorization": []string{token}},
 	}
 
 	return client

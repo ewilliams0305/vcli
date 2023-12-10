@@ -29,6 +29,10 @@ type VirtualControl interface {
 	DeviceInfo() (DeviceInfo, VirtualControlError)
 	ProgramInstances() (ProgramInstanceLibrary, VirtualControlError)
 	ProgramLibrary() (ProgramsLibrary, VirtualControlError)
+
+	StartRoom(id string) (bool, VirtualControlError)
+	StopRoom(id string) (bool, VirtualControlError)
+	RestartRoom(id string) (bool, VirtualControlError)
 }
 
 type vc struct {
@@ -95,4 +99,14 @@ func (v *vc) ProgramInstances() (ProgramInstanceLibrary, VirtualControlError) {
 
 func (v *vc) ProgramLibrary() (ProgramsLibrary, VirtualControlError) {
 	return getProgramLibrary(v)
+}
+
+func (v *vc) StartRoom(id string) (bool, VirtualControlError) {
+	return putRoomAction(v, id, "Start")
+}
+func (v *vc) StopRoom(id string) (bool, VirtualControlError) {
+	return putRoomAction(v, id, "Stop")
+}
+func (v *vc) RestartRoom(id string) (bool, VirtualControlError) {
+	return putRoomAction(v, id, "Restart")
 }

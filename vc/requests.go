@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 const (
@@ -69,4 +72,37 @@ func getProgramLibrary(vc *vc) (ProgramsLibrary, VirtualControlError) {
 		return ProgramsLibrary{}, newServerError(500, err)
 	}
 	return results.Device.Programs.ProgramLibrary, nil
+}
+
+func putRoomAction(vc *vc, id string, action string) (bool, VirtualControlError) {
+
+	apiUrl := vc.url
+	resource := PROGRAMINSTANCES
+	data := url.Values{}
+	data.Set("ProgramInstanceId", id)
+	data.Set(action, "true")
+
+	u, _ := url.ParseRequestURI(apiUrl)
+	u.Path = resource
+	//urlStr := u.String() // "https://api.com/user/"
+
+	req, err := http.NewRequest("PUT", vc.url+PROGRAMINSTANCES, strings.NewReader(data.Encode()))
+	if err != nil {
+		return false, newServerError(500, err)
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := vc.client.Do(req)
+	if err != nil {
+
+		return false, newServerError(resp.StatusCode, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, newServerError(resp.StatusCode, errors.New("FAILED HTTP REQUEST"))
+	}
+
+	return true, nil
 }

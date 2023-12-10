@@ -1,6 +1,10 @@
 package tui
 
 import (
+	"errors"
+	"fmt"
+	"time"
+
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -14,10 +18,18 @@ type RoomsTableModel struct {
 	err   error
 	help  HelpModel
 	row   string
+	busy  busy
 }
 
-func NewRoomsModel() RoomsTableModel {
-	return RoomsTableModel{}
+func NewRoomsModel() *RoomsTableModel {
+	return &RoomsTableModel{}
+}
+
+func BusyRoomsModel(b busy, rooms vc.ProgramInstanceLibrary) *RoomsTableModel {
+	return &RoomsTableModel{
+		busy:  b,
+		rooms: rooms,
+	}
 }
 
 func (m RoomsTableModel) Init() tea.Cmd {
@@ -27,6 +39,10 @@ func (m RoomsTableModel) Init() tea.Cmd {
 func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+
+	case busy:
+		m.busy = msg
+		return m, RefreshRoomData
 
 	case vc.ProgramInstanceLibrary:
 		m.rooms = msg
@@ -43,8 +59,26 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return InitialModel(), DeviceInfoCommand
 		case "down":
 			m.table.SetCursor(m.table.Cursor() + 1)
+			m.table, cmd = m.table.Update(msg)
+			return m, cmd
 		case "up":
 			m.table.SetCursor(m.table.Cursor() - 1)
+			m.table, cmd = m.table.Update(msg)
+			return m, cmd
+
+		case "ctrl+s":
+
+			room, err := getRoomFromCurson(m.rooms, m.table.Cursor())
+			if err != nil {
+				return NewRoomsErrorTable(err), nil
+			}
+			if room.Status == "Running" {
+				return m, cmdRoomStop(room.ProgramInstanceID)
+			} else if room.Status == "Stopped" {
+				return m, cmdRoomStart(room.ProgramInstanceID)
+			} else if room.Status == "Aborted" {
+				return m, cmdRoomStart(room.ProgramInstanceID)
+			}
 
 		case "enter":
 			return m, tea.Batch(
@@ -52,10 +86,23 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			)
 		}
 	}
-	m.row = m.table.SelectedRow()[0] + ": " + m.table.SelectedRow()[1]
-
+	//m.row = m.table.SelectedRow()[0] + ": " + m.table.SelectedRow()[1]
 	m.table, cmd = m.table.Update(msg)
 	return m, cmd
+}
+
+func getRoomFromCurson(rooms vc.ProgramInstanceLibrary, cursor int) (vc.ProgramInstance, error) {
+	var i int = 0
+	if rooms == nil {
+		return vc.ProgramInstance{}, errors.New("OUT OF RANGE")
+	}
+	for _, r := range rooms {
+		if i == cursor {
+			return r, nil
+		}
+		i++
+	}
+	return vc.ProgramInstance{}, errors.New("OUT OF RANGE")
 }
 
 func (m RoomsTableModel) View() string {
@@ -66,7 +113,11 @@ func (m RoomsTableModel) View() string {
 		s += SelectText.Render(m.row)
 	}
 
-	s += m.help.renderHelpInfo()
+	if m.busy.flag {
+		s += HighlightedText.Render(m.busy.message)
+	} else {
+		s += m.help.renderHelpInfo()
+	}
 
 	return s
 }
@@ -104,6 +155,7 @@ func NewRoomsTable(rooms vc.ProgramInstanceLibrary) RoomsTableModel {
 
 	return RoomsTableModel{
 		table: t,
+		rooms: rooms,
 		help:  NewHelpModel()}
 }
 
@@ -150,4 +202,74 @@ func RoomCommand() tea.Msg {
 		return err
 	}
 	return info
+}
+
+func RefreshRoomData() tea.Msg {
+
+	var rooms vc.ProgramInstanceLibrary
+	var err error
+	_, err = server.ProgramInstances()
+	if err != nil {
+		return err
+	}
+
+	//for i := 0; i < 3; i++ {
+	time.Sleep(3 * time.Second)
+
+	rooms, err = server.ProgramInstances()
+	if err != nil {
+		return err
+	}
+
+	//}
+
+	return rooms
+}
+
+func RoomRestart(id string) tea.Msg {
+
+	_, err := server.RestartRoom(id)
+	if err != nil {
+		return err
+	}
+	return busy{flag: true, message: fmt.Sprintf("Restarting room %s", id)}
+}
+func RoomStop(id string) tea.Msg {
+
+	_, err := server.StopRoom(id)
+	if err != nil {
+		return err
+	}
+	return busy{flag: true, message: fmt.Sprintf("Stopping room %s", id)}
+}
+func RoomStart(id string) tea.Msg {
+
+	_, err := server.StartRoom(id)
+	if err != nil {
+		return err
+	}
+	return busy{flag: true, message: fmt.Sprintf("Starting room %s", id)}
+}
+
+func cmdRoomStop(id string) tea.Cmd {
+	return func() tea.Msg {
+		return RoomStop(id)
+	}
+}
+
+func cmdRoomStart(id string) tea.Cmd {
+	return func() tea.Msg {
+		return RoomStart(id)
+	}
+}
+
+type busy struct {
+	flag    bool
+	message string
+}
+
+func cmdRoomRestart(id string) tea.Cmd {
+	return func() tea.Msg {
+		return RoomRestart(id)
+	}
 }
