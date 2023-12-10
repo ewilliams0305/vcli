@@ -146,7 +146,7 @@ func (m RoomsTableModel) View() string {
 	if m.busy.flag {
 		s += RenderMessageBox(m.width).Render(m.busy.message)
 	} else {
-		room := fmt.Sprintf("❓ %s %s\n", m.selectedRoom.ID, m.selectedRoom.CompileDateTime)
+		room := fmt.Sprintf("\u2192 use keyboard actions to manage %s %s (ctrl+s, ctrl+d...)\n", m.selectedRoom.ID, m.selectedRoom.ProgramName)
 		s += RenderMessageBox(m.width).Render(room)
 	}
 
@@ -157,7 +157,7 @@ func (m RoomsTableModel) View() string {
 func newRoomsTable(rooms vc.Rooms, cursor int, width int) table.Model {
 
 	columns := getColumns(width)
-	rows := getRows(width, rooms)
+	rows := getRows(width, cursor, rooms)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -185,36 +185,41 @@ func newRoomsTable(rooms vc.Rooms, cursor int, width int) table.Model {
 
 func getColumns(width int) []table.Column {
 
-	if width < 150 {
+	if width < 120 {
 
 		return []table.Column{
+			{Title: "", Width: 1},
 			{Title: "ID", Width: 20},
-			{Title: "NAME", Width: width - 44},
+			{Title: "NAME", Width: width - 49},
 			{Title: "STATUS", Width: 8},
 			{Title: "DEBUG", Width: 8},
 		}
 	}
 	return []table.Column{
+		{Title: "", Width: 1},
 		{Title: "ID", Width: 20},
 		{Title: "NAME", Width: 35},
 		{Title: "PROGRAM", Width: 35},
-		{Title: "NOTES", Width: width - 138},
+		{Title: "NOTES", Width: width - 141},
 		{Title: "TYPE", Width: 16},
 		{Title: "STATUS", Width: 8},
 		{Title: "DEBUG", Width: 8},
 	}
 }
 
-func getRows(width int, rooms vc.Rooms) []table.Row {
+func getRows(width int, cursor int, rooms vc.Rooms) []table.Row {
 	rows := []table.Row{}
-	small := width < 150
+	small := width < 120
 
-	for _, room := range rooms {
+	for i, room := range rooms {
+		marker := ""
+		if cursor == i {
+			marker = "\u2192"
+		}
 		if small {
-			// rows = append(rows, table.Row{room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
-			rows = append(rows, table.Row{room.ID, room.Name, GetStatus(room.Status), CheckMark(room.Debugging)})
+			rows = append(rows, table.Row{marker, room.ID, room.Name, GetStatus(room.Status), CheckMark(room.Debugging)})
 		} else {
-			rows = append(rows, table.Row{room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
+			rows = append(rows, table.Row{marker, room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
 		}
 	}
 	return rows
