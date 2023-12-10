@@ -19,6 +19,7 @@ type roomsKeyMap struct {
 	Start   key.Binding
 	Stop    key.Binding
 	Restart key.Binding
+	Debug   key.Binding
 	Create  key.Binding
 	Delete  key.Binding
 	Edit    key.Binding
@@ -27,7 +28,7 @@ type roomsKeyMap struct {
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k roomsKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Quit, k.Start, k.Stop, k.Delete}
+	return []key.Binding{k.Quit, k.Up, k.Down, k.Start, k.Restart, k.Debug}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -58,11 +59,19 @@ var roomKeys = roomsKeyMap{
 	),
 	Start: key.NewBinding(
 		key.WithKeys("ctrl+s"),
-		key.WithHelp("ctrl+s", "star room"),
+		key.WithHelp("ctrl+s", "start/stop room"),
 	),
 	Stop: key.NewBinding(
 		key.WithKeys("ctrl+s"),
 		key.WithHelp("ctrl+s", "stop room"),
+	),
+	Debug: key.NewBinding(
+		key.WithKeys("ctrl+d"),
+		key.WithHelp("ctrl+d", "enable/disable debug"),
+	),
+	Restart: key.NewBinding(
+		key.WithKeys("ctrl+r"),
+		key.WithHelp("ctrl+r", "restart room"),
 	),
 }
 
@@ -91,33 +100,12 @@ func (m RoomsHelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch {
-		// case key.Matches(msg, m.keys.Up):
-		// 	m.lastKey = "↑\n\nMoves the menu up one item"
-		// case key.Matches(msg, m.keys.Down):
-		// 	m.lastKey = "↓\n\nMoves the menu down one item"
-		// case key.Matches(msg, m.keys.Left):
-		// 	m.lastKey = "←\n\nMoves the menu to the left"
-		// case key.Matches(msg, m.keys.Right):
-		// 	m.lastKey = "→\n\nMoves the menu to the right"
 
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, m.keys.Quit):
 			return InitialRoomsModel(200, 200), RoomCommand
 		}
-
-		// switch msg.String() {
-		// case "p", "P":
-		// 	m.lastKey = "ctrl+p\n\nView and manage loaded program files"
-		// case "r", "R":
-		// 	m.lastKey = "ctrl+r\n\nView and manage active rooms"
-		// case "d", "D":
-		// 	m.lastKey = "ctrl+d\n\nView device maps and communication status"
-		// case "a", "A":
-		// 	m.lastKey = "ctrl+a\n\nCreate and access API tokens"
-		// case "i", "I":
-		// 	m.lastKey = "ctrl+i\n\nRefresh and view device information"
-		// }
 	}
 
 	return m, nil
@@ -125,11 +113,6 @@ func (m RoomsHelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m RoomsHelpModel) View() string {
 	var status string
-	// if m.lastKey == "" {
-	// 	status = "Enter key below for extended help information..."
-	// } else {
-	// 	status = "You chose: " + m.inputStyle.Render(m.lastKey)
-	// }
 
 	helpView := m.help.View(m.keys)
 	height := 8 - strings.Count(status, "\n") - strings.Count(helpView, "\n")

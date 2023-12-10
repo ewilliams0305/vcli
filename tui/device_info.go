@@ -115,7 +115,6 @@ func HomeDeviceInfo(info vc.DeviceInfo, width int) DeviceTableModel {
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240")).
 		BorderBottom(true).
-		//Width(width).
 		Bold(true)
 	s.Selected = s.Selected.
 		Foreground(lipgloss.Color("240")).

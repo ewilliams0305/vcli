@@ -23,6 +23,7 @@ type VcRoomApi interface {
 	GetRooms() (Rooms, VirtualControlError)
 	StartRoom(id string) (bool, VirtualControlError)
 	StopRoom(id string) (bool, VirtualControlError)
+	DebugRoom(id string, enable bool) (bool, VirtualControlError)
 	RestartRoom(id string) (bool, VirtualControlError)
 	// EditRoom(id string, name string, notes string) (ActionResult, VirtualControlError)
 	// AddRoom(id string) (ActionResult, VirtualControlError)
@@ -69,13 +70,16 @@ func mapRoomsToPrograms(instances ProgramInstanceLibrary, library ProgramsLibrar
 }
 
 func (v *VC) StartRoom(id string) (bool, VirtualControlError) {
-	return putRoomAction(v, id, "Start")
+	return putRoomAction(v, id, "Start", true)
 }
 func (v *VC) StopRoom(id string) (bool, VirtualControlError) {
-	return putRoomAction(v, id, "Stop")
+	return putRoomAction(v, id, "Stop", true)
 }
 func (v *VC) RestartRoom(id string) (bool, VirtualControlError) {
-	return putRoomAction(v, id, "Restart")
+	return putRoomAction(v, id, "Restart", true)
+}
+func (v *VC) DebugRoom(id string, enable bool) (bool, VirtualControlError) {
+	return putRoomAction(v, id, "DebuggingEnabled", enable)
 }
 
 func getProgramInstances(server *VC) (ProgramInstanceLibrary, VirtualControlError) {
@@ -89,13 +93,19 @@ func getProgramInstances(server *VC) (ProgramInstanceLibrary, VirtualControlErro
 	return results.Device.Programs.ProgramInstanceLibrary, nil
 }
 
-func putRoomAction(server *VC, id string, action string) (bool, VirtualControlError) {
+func putRoomAction(server *VC, id string, action string, state bool) (bool, VirtualControlError) {
 
+	var stateVal string
+	if state {
+		stateVal = "true"
+	} else {
+		stateVal = "false"
+	}
 	apiUrl := server.url
 	resource := PROGRAMINSTANCES
 	data := url.Values{}
 	data.Set("ProgramInstanceId", id)
-	data.Set(action, "true")
+	data.Set(action, stateVal)
 
 	u, _ := url.ParseRequestURI(apiUrl)
 	u.Path = resource

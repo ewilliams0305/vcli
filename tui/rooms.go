@@ -2,11 +2,13 @@ package tui
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 
 	vc "github.com/ewilliams0305/VC4-CLI/vc"
 )
@@ -20,6 +22,11 @@ type RoomsTableModel struct {
 	busy          busy
 	cursor        int
 	width, height int
+}
+
+type busy struct {
+	flag    bool
+	message string
 }
 
 func InitialRoomsModel(width, height int) *RoomsTableModel {
@@ -51,6 +58,14 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 
+	case tickMsg:
+		w, h, _ := term.GetSize(int(os.Stdout.Fd()))
+		if w != m.width || h != m.height {
+			m.width = w
+			m.height = h
+		}
+		return m, tea.Batch(RoomCommand, tick)
+
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -64,15 +79,14 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case busy:
 		m.busy = msg
-		return m, RefreshRoomData
+		return m, nil
 
 	case vc.Rooms:
 		m.busy = busy{flag: false}
 		m.rooms = msg
-		m.table = newRoomsTable(msg, m.cursor)
+		m.table = newRoomsTable(msg, m.cursor, m.width)
 		m.selectedRoom = msg[m.cursor]
 		return m, nil
-		//return NewRoomsTable(msg, m.cursor), nil
 
 	case error:
 		m.err = msg
@@ -114,6 +128,11 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, cmdRoomRestart(m.selectedRoom.ID)
 			}
 
+		case "ctrl+d":
+			if m.err == nil {
+				return m, cmdRoomDebug(m.selectedRoom.ID, !m.selectedRoom.Debugging)
+			}
+
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
@@ -135,28 +154,17 @@ func (m RoomsTableModel) View() string {
 	return s
 }
 
-func newRoomsTable(rooms vc.Rooms, cursor int) table.Model {
-	columns := []table.Column{
-		{Title: "ID", Width: 20},
-		{Title: "NAME", Width: 20},
-		{Title: "PROGRAM", Width: 30},
-		{Title: "NOTES", Width: 30},
-		{Title: "TYPE", Width: 8},
-		{Title: "STATUS", Width: 8},
-		{Title: "DEBUG", Width: 8},
-	}
+func newRoomsTable(rooms vc.Rooms, cursor int, width int) table.Model {
 
-	rows := []table.Row{}
-
-	for _, room := range rooms {
-		rows = append(rows, table.Row{room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
-	}
+	columns := getColumns(width)
+	rows := getRows(width, rooms)
 
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(false),
 		table.WithHeight(9),
+		table.WithWidth(width),
 	)
 
 	s := table.DefaultStyles()
@@ -171,10 +179,45 @@ func newRoomsTable(rooms vc.Rooms, cursor int) table.Model {
 		Background(lipgloss.Color(PrimaryDark)).
 		Bold(false)
 	t.SetStyles(s)
-
 	t.SetCursor(cursor)
-
 	return t
+}
+
+func getColumns(width int) []table.Column {
+
+	if width < 150 {
+
+		return []table.Column{
+			{Title: "ID", Width: 20},
+			{Title: "NAME", Width: width - 44},
+			{Title: "STATUS", Width: 8},
+			{Title: "DEBUG", Width: 8},
+		}
+	}
+	return []table.Column{
+		{Title: "ID", Width: 20},
+		{Title: "NAME", Width: 35},
+		{Title: "PROGRAM", Width: 35},
+		{Title: "NOTES", Width: width - 138},
+		{Title: "TYPE", Width: 16},
+		{Title: "STATUS", Width: 8},
+		{Title: "DEBUG", Width: 8},
+	}
+}
+
+func getRows(width int, rooms vc.Rooms) []table.Row {
+	rows := []table.Row{}
+	small := width < 150
+
+	for _, room := range rooms {
+		if small {
+			// rows = append(rows, table.Row{room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
+			rows = append(rows, table.Row{room.ID, room.Name, GetStatus(room.Status), CheckMark(room.Debugging)})
+		} else {
+			rows = append(rows, table.Row{room.ID, room.Name, room.ProgramName, room.Notes, room.ProgramType, GetStatus(room.Status), CheckMark(room.Debugging)})
+		}
+	}
+	return rows
 }
 
 func NewRoomsErrorTable(msg vc.VirtualControlError) RoomsTableModel {
@@ -222,24 +265,6 @@ func RoomCommand() tea.Msg {
 	return info
 }
 
-func RefreshRoomData() tea.Msg {
-
-	var rooms vc.Rooms
-	var err error
-	_, err = server.GetRooms()
-	if err != nil {
-		return err
-	}
-
-	//for i := 0; i < 3; i++ {
-	time.Sleep(3 * time.Second)
-	rooms, err = server.GetRooms()
-	if err != nil {
-		return err
-	}
-	return rooms
-}
-
 func RoomRestart(id string) tea.Msg {
 
 	_, err := server.RestartRoom(id)
@@ -265,6 +290,18 @@ func RoomStart(id string) tea.Msg {
 	return busy{flag: true, message: fmt.Sprintf("starting room %s, please wait...", id)}
 }
 
+func RoomDebug(id string, enable bool) tea.Msg {
+
+	_, err := server.DebugRoom(id, enable)
+	if err != nil {
+		return err
+	}
+	if enable {
+		return busy{flag: true, message: fmt.Sprintf("enable debugging on room %s, please wait...", id)}
+	}
+	return busy{flag: true, message: fmt.Sprintf("disabling debugging on room %s, please wait...", id)}
+}
+
 func cmdRoomStop(id string) tea.Cmd {
 	return func() tea.Msg {
 		return RoomStop(id)
@@ -277,14 +314,19 @@ func cmdRoomStart(id string) tea.Cmd {
 	}
 }
 
-type busy struct {
-	flag    bool
-	message string
+func cmdRoomDebug(id string, enable bool) tea.Cmd {
+	return func() tea.Msg {
+		return RoomDebug(id, enable)
+	}
 }
 
 func cmdRoomRestart(id string) tea.Cmd {
 	return func() tea.Msg {
-		return RoomRestart(id)
+		// VC4 DOES NOT WORK WHEN RESTART IS ISSUED => HACK
+		RoomStop(id)
+		time.Sleep(time.Second + 3)
+
+		return RoomStart(id)
 	}
 }
 
