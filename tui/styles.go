@@ -45,3 +45,7 @@ func CheckMark(status bool) string {
 	}
 	return "\u274C"
 }
+
+func GetIcons() string {
+  return "🎏🍔🍒🍥🎮📦🦁🐶🐸🍕🥐🧲";
+}
