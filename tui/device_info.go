@@ -45,16 +45,15 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c", "esc":
-			return program, tea.Batch(tick, DeviceInfoCommand)
+			return ReturnToHomeModel(info), tea.Batch(tick, DeviceInfoCommand)
 		case "down":
 			m.Table.SetCursor(m.Table.Cursor() + 1)
 		case "up":
 			m.Table.SetCursor(m.Table.Cursor() - 1)
 
-		case "enter":
-			return m, tea.Batch(
-				tea.Printf("Let's go to %s!", m.Table.SelectedRow()[1]),
-			)
+		case "r", "ctrl+r":
+			return InitialRoomsModel(m.width, m.height), RoomCommand
+
 		}
 	}
 	m.row = m.Table.SelectedRow()[0] + ": " + m.Table.SelectedRow()[1]
@@ -67,7 +66,7 @@ func (m DeviceTableModel) View() string {
 	s += BaseStyle.Render(m.Table.View()) + "\n\n"
 
 	if len(m.row) > 0 {
-		s += SelectText.Render(m.row)
+		s += RenderMessageBox(m.width).Render(m.row)
 	}
 
 	s += m.Help.renderHelpInfo()
@@ -164,10 +163,11 @@ func NewDeviceTable(info vc.DeviceInfo, width int) DeviceTableModel {
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240")).
 		BorderBottom(true).
+		Foreground(lipgloss.Color(AccentColor)).
 		Bold(true)
 	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
+		Foreground(lipgloss.Color(PrimaryLight)).
+		Background(lipgloss.Color(PrimaryDark)).
 		Bold(false)
 	t.SetStyles(s)
 

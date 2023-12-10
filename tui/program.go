@@ -238,7 +238,7 @@ func (m *MainModel) updateSize(w, h int) {
 	m.width = w
 	m.width = h
 
-	m.View()
+	//m.View()
 }
 
 // Sends a message back to the update function to start the tick over again.

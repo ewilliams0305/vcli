@@ -8,7 +8,7 @@ import (
 const (
 	PrimaryColor string = "#3F51B5"
 	PrimaryLight string = "#C5CAE9"
-	PrimaryDark  string = "#303F9F"
+	PrimaryDark  string = "#001F5F"
 	AccentColor  string = "#00796B"
 )
 
@@ -64,7 +64,7 @@ func GetStatus(status string) string {
 
 func CheckMark(status bool) string {
 	if status {
-		return " " + "\u2713"
+		return " \u2713"
 	}
 	return "\u274C"
 }
