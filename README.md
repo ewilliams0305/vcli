@@ -32,23 +32,28 @@ the GO sdk. Download the SDK at https://go.dev/dl/ Once download you can build t
 To build on windows for windows simply navigate to the repostiry root director and issue `go build ./...` to compile an EXE including all child modules.  See the go sdk documentation for more details and optional compiler flags.
 
 ## Linux
-To build the CLI from a windows computer for the VC4 appliance, you can use the go cross compiler.  Ensure the go compiler is installed on your machine and open a ![Static Badge](https://img.shields.io/badge/POWER-SHELL-yellow) terminal session.
+To build the CLI from a windows computer for the VC4 appliance, you can use the go cross compiler.  Ensure the go compiler is installed on your machine and open a PowerShell terminal session.
+
+![Static Badge](https://img.shields.io/badge/POWER-SHELL-yellow)
 
 ![Readme Image](./docs/ps_build.png)
 
-Change you directory to the repository root directory
+Change your directory to the repository root directory
+
 `cd ./`
 
-Set the ![Static Badge](https://img.shields.io/badge/GOOS-yellow) and ![Static Badge](https://img.shields.io/badge/GOARCH-yellow) environment variables to ![Static Badge](https://img.shields.io/badge/LINUX-AMD64-red)
+Set the GOOS and GOARCH environment variables to ![Static Badge](https://img.shields.io/badge/LINUX-AMD64-red)
 
-`VC4-CLI> $env:GOOS = "linux"`
-`VC4-CLI> $env:GOARCH = "amd64"`
+![Static Badge](https://img.shields.io/badge/GOOS-yellow) `VC4-CLI> $env:GOOS = "linux"`
 
-Run the ![Static Badge](https://img.shields.io/badge/GO-BUILD-red) command to create a new executable in the bin directory that will run on you VC4 appliance.
+![Static Badge](https://img.shields.io/badge/GOARCH-yellow) `VC4-CLI> $env:GOARCH = "amd64"`
 
-`VC4-CLI> go build -tags netgo -installsuffix netgo -ldflags="-w -s" -o bin/ .\...`
+Run the GO BUILD command to create a new executable in the bin directory that will run on your VC4 appliance. 
+The flags used will optimize the compilation and output the linux amd64 binary to the ./bin directory in the repository. 
 
-Once compiled you should have a file titled ![Static Badge](https://img.shields.io/badge/VC4-CLI-green) with no file extension (remeber linux...).
+![Static Badge](https://img.shields.io/badge/GO-BUILD-red)`VC4-CLI> go build -tags netgo -installsuffix netgo -ldflags="-w -s" -o bin/ .\...`
+
+Once compiled you should have a file titled with the name of your repositories root directory with no file extension (remeber linux...).
 
 Copy this file to your VC4 appliance and execute `chmod +x ./VC4-CLI` to allow execution.  Finally run the application `./VC4-CLI`.  Of course you can name this file anything you like and add addtional flags to the go build command.
 
