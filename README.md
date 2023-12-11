@@ -11,7 +11,7 @@ __      _______ _  _      _____ _      _____
 ```
 ![Readme Image](./docs/info.gif)
 
-# vcli
+# 🆑 vcli
 Ever found yourself connected to a VC4 appliance troublshooting the OS, working on the file system,
 or restarting services, only to find you can't perform actions on the actual VC4 service? Well now you can. 
 The VC4 CLI provides full control over the VC4 service from within the linux terminal allowing operators to:
@@ -26,14 +26,14 @@ The VC4 CLI leverages the Crestron Virtual control REST API with a loopback IP a
 to provide a localized CLI for the VC4 service. This CLI 
 uses the `BubbleTea` TUI framework for navigation and command line workflows. 
 
-# Building 
+# 👷‍♂️ Building 
 To compile the cli for your VC4 appliance you will need to install
 the GO sdk. Download the SDK at https://go.dev/dl/ Once download you can build the ~/. root repository directory as an executable. 
 
-## Windows
+## 🪟 Windows
 To build on windows for windows simply navigate to the repostiry root director and issue `go build ./...` to compile an EXE including all child modules.  See the go sdk documentation for more details and optional compiler flags.
 
-## Linux
+## 🐧 Linux
 To build the CLI from a windows computer for the VC4 appliance, you can use the go cross compiler.  Ensure the go compiler is installed on your machine and open a PowerShell terminal session.
 
 ![Static Badge](https://img.shields.io/badge/POWER-SHELL-yellow)
@@ -61,7 +61,7 @@ Copy this file to your VC4 appliance and execute `chmod +x ./vcli` to allow exec
 
 ![Static Badge](https://img.shields.io/badge/MAKE-ALL-red) *Of course you could just install make and type `make all`*
 
-# Launching
+# 🚀 Launching
 Once compiled you can launch the application by executing the binary. 
 The application supports serveral command line argument flags
 
@@ -80,12 +80,26 @@ this from one VC4 to another VC4. Lauch the app with flags;
 
 If the VC4 service is running you will instantly see the device information table loaded with data. 
 
-# Controlling Rooms
-As of v0.0.1 users can start, stop, enable/disable debugging, and restart rooms.  CRUD operrations to create new rooms will be added at a later time.
- 
+# 🦮 Guides
+Tutorials for the `vcli` providing use cases and examples 
+
+## 🚻 Controlling Rooms
+
+### Start and stop rooms
+As of v0.0.1 users can start, stop, enable/disable debugging, and restart rooms.  CRUD operrations to create new rooms will be added at a later time. 
 ![Readme Image](./docs/rooms.gif)
 
-# Crestron REST API Reference 
+### Add and remove rooms
+
+## 🧑‍💻 Programs
+
+## ⚖️ Authorization and Licenses
+
+## 📲 Device mapping and status
+
+## ℹ️ System information 
+
+# 🕸️ Crestron REST API Reference 
 https://www.crestron.com/getmedia/29921c49-86df-488c-a63b-ab88620d7175/mg_pg_rest-api-crestron-virtual-control
 
 
