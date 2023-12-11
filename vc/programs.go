@@ -89,6 +89,20 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 	return response.StatusCode, nil
 }
 
+func addFormField(writer *multipart.Writer, key string, value string) {
+
+	fieldWriter, err := writer.CreateFormField(key)
+	if err != nil {
+		//updater.Logger.Warn("Error creating form field:", err)
+		return
+	}
+	_, err = fieldWriter.Write([]byte(value))
+	if err != nil {
+		//updater.Logger.Warn("Error writing form field value:", err)
+		return
+	}
+}
+
 type ProgramOptions struct {
  appFile string
  name    string
