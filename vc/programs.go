@@ -3,6 +3,7 @@ package vc
 import(
  "bytes"
  "errors"
+ "net/http"
  "io"
  "os"
  "strings"
@@ -68,7 +69,7 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 		return 0, err
 	}
 
-	request, err := vc.client.NewRequest("POST", vc.url+PROGRAMLIBRARY, body)
+	request, err := http.NewRequest("POST", vc.url+PROGRAMLIBRARY, body)
 	if err != nil {
 		return 0, err
 	}
