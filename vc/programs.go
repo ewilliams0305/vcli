@@ -82,7 +82,7 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 	}
 	defer response.Body.Close()
 
-	if !response.StatusCode == 200 {
+	if response.StatusCode != 200 {
 		 return response.StatusCode, NewServerError(response.StatusCode, err)
 	}
 
