@@ -29,7 +29,7 @@ func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
 }
 
 // UPLOADS A NEW PROGRAM TO THE APPLIANCE
-func postProgram(vc *VC, options.ProgramOptions) (status int, err error) {
+func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 
  if !strings.HasSuffix(options.AppFile, ".cpz") || !strings.HasSuffix(options.AppFile, ".cpz"){
   return 0, errors.New("")
