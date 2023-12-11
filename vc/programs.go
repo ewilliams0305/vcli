@@ -1,8 +1,12 @@
 package vc
 
 import(
+ "bytes"
  "errors"
+ "io"
+ "os"
  "strings"
+ "writer"
 )
 
 const (
