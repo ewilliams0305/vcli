@@ -8,6 +8,9 @@
 *.so
 *.dylib
 
+# Published Linux binary
+/vcli
+
 # Test binary, built with `go test -c`
 *.test
 
