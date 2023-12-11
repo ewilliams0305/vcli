@@ -1,6 +1,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ewilliams0305/offshoot?style=flat-square)](https://goreportcard.com/report/github.com/ewilliams0305/vcli)
 ![GitHub](https://img.shields.io/github/license/ewilliams0305/vcli) 
 ![GitHub all releases](https://img.shields.io/github/downloads/ewilliams0305/vcli/total) 
+[![GitHub issues](https://img.shields.io/github/issues/ewilliams0305/vcli)](https://github.com/ewilliams0305/vcli/issues)
 
 ![Readme Image](./docs/info.gif)
 
