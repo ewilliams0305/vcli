@@ -31,11 +31,11 @@ func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
 // UPLOADS A NEW PROGRAM TO THE APPLIANCE
 func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 
- if !strings.HasSuffix(options.AppFile, ".cpz") || !strings.HasSuffix(options.AppFile, ".cpz"){
+ if !strings.HasSuffix(options.appFile, ".cpz") || !strings.HasSuffix(options.appFile, ".cpz"){
   return 0, errors.New("")
  }
  
-	file, err := os.Open(options.AppFile)
+	file, err := os.Open(options.appFile)
 	if err != nil {
 		return 0, err
 	}
@@ -44,7 +44,7 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	part, err := writer.CreateFormFile("file", options.AppFile)
+	part, err := writer.CreateFormFile("file", options.appFile)
 	if err != nil {
 		return 0, err
 	}
@@ -57,7 +57,7 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 	file.Close()
 
 	addFormField(writer, "FriendlyName", options.name)
-	addFormField(writer, "Manufacturer", options.notes)
+	addFormField(writer, "Notes", options.notes)
 
 	err = writer.Close()
 	if err != nil {
