@@ -2,11 +2,15 @@ package vc
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -16,6 +20,7 @@ const (
 
 type VcProgramApi interface {
 	GetPrograms() (Programs, VirtualControlError)
+	CreateProgram(options ProgramOptions) (status int, err VirtualControlError)
 }
 
 func (v *VC) GetPrograms() (Programs, VirtualControlError) {
@@ -29,7 +34,17 @@ func (v *VC) GetPrograms() (Programs, VirtualControlError) {
 		p = append(p, value)
 	}
 
+	comparById := func(a, b ProgramEntry) int {
+		return cmp.Compare(a.ProgramName, b.ProgramName)
+	}
+
+	slices.SortFunc(p, comparById)
+
 	return p, nil
+}
+
+func (v *VC) CreateProgram(options ProgramOptions) (status int, err VirtualControlError) {
+	return postProgram(v, options)
 }
 
 func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
@@ -46,20 +61,20 @@ func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
 // UPLOADS A NEW PROGRAM TO THE APPLIANCE
 func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 
-	if !strings.HasSuffix(options.appFile, ".cpz") || !strings.HasSuffix(options.appFile, ".cpz") {
-		return 0, errors.New("")
+	if !programIsValid(options.AppFile) {
+		return 0, errors.New("INVALID FILE EXTENSION")
 	}
 
-	file, err := os.Open(options.appFile)
+	file, err := os.Open(options.AppFile)
 	if err != nil {
 		return 0, err
 	}
 	defer file.Close()
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
+	form := &bytes.Buffer{}
+	writer := multipart.NewWriter(form)
 
-	part, err := writer.CreateFormFile("file", options.appFile)
+	part, err := writer.CreateFormFile("AppFile", filepath.Base(options.AppFile))
 	if err != nil {
 		return 0, err
 	}
@@ -71,15 +86,16 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 
 	file.Close()
 
-	addFormField(writer, "FriendlyName", options.name)
-	addFormField(writer, "Notes", options.notes)
+	addFormField(writer, "filetype", "AppFile")
+	addFormField(writer, "FriendlyName", options.Name)
+	addFormField(writer, "Notes", options.Notes)
 
 	err = writer.Close()
 	if err != nil {
 		return 0, err
 	}
 
-	request, err := http.NewRequest("POST", vc.url+PROGRAMLIBRARY, body)
+	request, err := http.NewRequest("POST", vc.url+PROGRAMLIBRARY, form)
 	if err != nil {
 		return 0, err
 	}
@@ -93,10 +109,28 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
+		return response.StatusCode, NewServerError(response.StatusCode, errors.New("FAILED TO UPLOAD FILE"))
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		return response.StatusCode, NewServerError(response.StatusCode, err)
 	}
 
-	return response.StatusCode, nil
+	if !strings.Contains(string(body), "SUCCESS") {
+		fmt.Printf("YAY! %+v", body)
+		return response.StatusCode, nil
+	}
+	fmt.Printf("%+v", body)
+
+	return response.StatusCode, NewServerError(response.StatusCode, errors.New("FILE FAILED TO UPLOAD"))
+}
+
+func programIsValid(file string) bool {
+
+	return strings.HasSuffix(file, ".cpz") ||
+		strings.HasSuffix(file, ".zip") ||
+		strings.HasSuffix(file, ".lpz")
 }
 
 func addFormField(writer *multipart.Writer, key string, value string) {
@@ -111,16 +145,6 @@ func addFormField(writer *multipart.Writer, key string, value string) {
 		//updater.Logger.Warn("Error writing form field value:", err)
 		return
 	}
-}
-
-type ProgramOptions struct {
-	appFile string
-	name    string
-	notes   string
-}
-
-func NewProgramOptions() ProgramOptions {
-	return ProgramOptions{}
 }
 
 type ProgramLibraryResponse struct {

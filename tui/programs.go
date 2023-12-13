@@ -58,7 +58,11 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.width = w
 			m.height = h
 		}
-		return m, tea.Batch(ProgramsQuery, tick)
+
+		if m.err == nil {
+			return m, tea.Batch(ProgramsQuery, tick)
+		}
+		return m, nil
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -66,6 +70,11 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.table, cmd = m.table.Update(msg)
 		return m, cmd
 
+	case ProgramLoadResult:
+		//last := len(m.Programs)
+		//m.cursor = last
+		//m.selected = m.Programs[last]
+		return m, nil
 	case int:
 		m.cursor = msg
 		m.selected = m.Programs[msg]
@@ -102,10 +111,10 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, cmdCursor(m.table.Cursor())
 			}
 
-		case "ctrl+r":
-			// if m.err == nil {
-			// 	return m, cmdRoomRestart(m.selectedRoom.ID)
-			// }
+		case "ctrl+n":
+			if m.err == nil {
+				return m, CreateNewProgram
+			}
 
 		case "ctrl+d":
 			// if m.err == nil {
@@ -247,3 +256,18 @@ func ProgramsQuery() tea.Msg {
 	}
 	return programs
 }
+
+func CreateNewProgram() tea.Msg {
+
+	result, err := server.CreateProgram(vc.ProgramOptions{
+		AppFile: "C:/Users/ewilliams/source/repos/Cenero-App-Kit/release/Programs/Cenero.Video.Nvx.Producer.cpz",
+		Name:    "NVX Producer",
+		Notes:   "Cenero's SIMPL Sharp NVX Program",
+	})
+	if err != nil {
+		return err
+	}
+	return ProgramLoadResult(result)
+}
+
+type ProgramLoadResult int
