@@ -26,6 +26,13 @@ func validateProgramFile(file string) error {
 	return fmt.Errorf("INVALID FILE EXTENSION %s", file)
 }
 
+func validateProgramName(name string) error{
+ if len(name) < 5 {
+   fmt.Errorf("NAME %s MUST HAVE AT LEAST 5 CHARATERS", name)
+ } 
+ return nil
+}
+
 func NewProgramFormModel() NewProgramForm {
 	return NewProgramForm{
 		form: huh.NewForm(
@@ -33,23 +40,24 @@ func NewProgramFormModel() NewProgramForm {
 				huh.NewInput().
 					Key("FILE").
 					Title("Enter local file path").
-					//Prompt("📂").
-					//Placeholder("/home/user/my_progam.cpz").
+					Prompt("📂").
+					Placeholder("/home/user/my_progam.cpz").
 					Validate(validateProgramFile).
 					Value(&filePath),
 
 				huh.NewInput().
 					Key("NAME").
 					Title("Enter Friendly Name").
-					//Prompt("🍌").
-					//Placeholder("My friendly program name").
-					Value(&fileName),
+					Prompt("🍌").
+					Placeholder("My friendly program name").
+					Validate(validateProgramName).
+     Value(&fileName),
 
 				huh.NewInput().
 					Key("NOTES").
 					Title("Enter Notes").
-					//Prompt("📝").
-					//Placeholder("My seemingly pointless notes").
+					Prompt("📝").
+					Placeholder("My seemingly pointless notes").
 					Value(&notes),
 			),
 		),
@@ -68,14 +76,10 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.form.State == huh.StateCompleted {
 
-			path := m.form.GetString("FILE")
-			name := m.form.GetString("NAME")
-			notes := m.form.GetString("NOTES")
-
 			return InitialProgramsModel(200, 200), SubmitNewProgram(vc.ProgramOptions{
-				AppFile: path,
-				Name:    name,
-				Notes:   notes,
+				AppFile: m.form.GetString("FILE"),
+				Name:    m.form.GetString("NAME"),
+				Notes:   m.form.GetString("NOTES"),
 			})
 		}
 	}
@@ -84,12 +88,6 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m NewProgramForm) View() string {
-	// if m.form.State == huh.StateCompleted {
-	// 	path := m.form.GetString("FILE")
-	// 	name := m.form.GetString("NAME")
-	// 	notes := m.form.GetString("NOTES")
-	// 	return fmt.Sprintf("You selected: %s, Lvl. %d", path, name, notes)
-	// }
 	return m.form.View()
 }
 
