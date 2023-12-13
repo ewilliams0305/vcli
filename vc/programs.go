@@ -22,6 +22,7 @@ const (
 type VcProgramApi interface {
 	GetPrograms() (Programs, VirtualControlError)
 	CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError)
+	DeleteProgram(id int) (result ProgramDeleteResult, err VirtualControlError)
 }
 
 func (v *VC) GetPrograms() (Programs, VirtualControlError) {
@@ -46,6 +47,10 @@ func (v *VC) GetPrograms() (Programs, VirtualControlError) {
 
 func (v *VC) CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError) {
 	return postProgram(v, options)
+}
+
+func (v *VC) DeleteProgram(id int) (result ProgramDeleteResult, err VirtualControlError) {
+	return deleteProgram(v, id)
 }
 
 func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
@@ -140,6 +145,37 @@ func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, er
 	return NewProgramUploadResult(&actionProgram), nil
 }
 
+func deleteProgram(vc *VC, id int) (result ProgramDeleteResult, err error) {
+
+	request, err := http.NewRequest("DELETE", vc.url+PROGRAMLIBRARY+fmt.Sprintf("/%d", id), nil)
+	if err != nil {
+		return ProgramDeleteResult{}, err
+	}
+
+	response, err := vc.client.Do(request)
+	if err != nil {
+		return ProgramDeleteResult{}, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return ProgramDeleteResult{}, NewServerError(response.StatusCode, errors.New("FAILED TO DELETE PROGRAM"))
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return ProgramDeleteResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	actions := ActionResponse[any]{}
+	err = json.Unmarshal(body, &actions)
+	if err != nil {
+		return ProgramDeleteResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	return NewProgramDeleteResult(&actions), nil
+}
+
 func programIsValid(file string) bool {
 
 	return strings.HasSuffix(file, ".cpz") ||
@@ -219,5 +255,24 @@ func NewProgramUploadResult(actions *ActionResponse[ProgramEntry]) ProgramUpload
 		Result:       s,
 		Code:         c,
 		Success:      c == 0,
+	}
+}
+
+type ProgramDeleteResult struct {
+	Result  string
+	Code    int16
+	Success bool
+}
+
+func NewProgramDeleteResult(actions *ActionResponse[any]) ProgramDeleteResult {
+
+	s := actions.Actions[0].Results[0].StatusInfo
+	c := actions.Actions[0].Results[0].StatusID
+
+	return ProgramDeleteResult{
+
+		Result:  s,
+		Code:    c,
+		Success: c == 0,
 	}
 }
