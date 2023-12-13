@@ -47,7 +47,7 @@ func (v *VC) GetRooms() (Rooms, VirtualControlError) {
 
 func mapRoomsToPrograms(instances ProgramInstanceLibrary, library ProgramsLibrary) (rooms Rooms, err error) {
 
-	var roomsModel = make([]Room, 0)
+	var roomsModel = make(Rooms, 0)
 
 	for _, r := range instances {
 		id := fmt.Sprint(r.ProgramLibraryID)

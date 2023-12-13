@@ -1,13 +1,17 @@
 package vc
 
-import(
- "bytes"
- "errors"
- "net/http"
- "io"
- "os"
- "strings"
- "mime/multipart"
+import (
+	"bytes"
+	"cmp"
+	"encoding/json"
+	"errors"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
 )
 
 const (
@@ -15,11 +19,32 @@ const (
 )
 
 type VcProgramApi interface {
-	ProgramLibrary() (ProgramsLibrary, VirtualControlError)
+	GetPrograms() (Programs, VirtualControlError)
+	CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError)
 }
 
-func (v *VC) ProgramLibrary() (ProgramsLibrary, VirtualControlError) {
-	return getProgramLibrary(v)
+func (v *VC) GetPrograms() (Programs, VirtualControlError) {
+	progs, err := getProgramLibrary(v)
+	if err != nil {
+		return make(Programs, 0), err
+	}
+
+	p := make([]ProgramEntry, 0, len(progs))
+	for _, value := range progs {
+		p = append(p, value)
+	}
+
+	comparById := func(a, b ProgramEntry) int {
+		return cmp.Compare(a.ProgramID, b.ProgramID)
+	}
+
+	slices.SortFunc(p, comparById)
+
+	return p, nil
+}
+
+func (v *VC) CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError) {
+	return postProgram(v, options)
 }
 
 func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
@@ -34,59 +59,78 @@ func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
 }
 
 // UPLOADS A NEW PROGRAM TO THE APPLIANCE
-func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
+func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, err error) {
 
- if !strings.HasSuffix(options.appFile, ".cpz") || !strings.HasSuffix(options.appFile, ".cpz"){
-  return 0, errors.New("")
- }
- 
-	file, err := os.Open(options.appFile)
+	if !programIsValid(options.AppFile) {
+		return ProgramUploadResult{}, errors.New("INVALID FILE EXTENSION")
+	}
+
+	file, err := os.Open(options.AppFile)
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 	defer file.Close()
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
+	form := &bytes.Buffer{}
+	writer := multipart.NewWriter(form)
 
-	part, err := writer.CreateFormFile("file", options.appFile)
+	part, err := writer.CreateFormFile("AppFile", filepath.Base(options.AppFile))
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 
 	_, err = io.Copy(part, file)
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 
 	file.Close()
 
-	addFormField(writer, "FriendlyName", options.name)
-	addFormField(writer, "Notes", options.notes)
+	addFormField(writer, "filetype", "AppFile")
+	addFormField(writer, "FriendlyName", options.Name)
+	addFormField(writer, "Notes", options.Notes)
 
 	err = writer.Close()
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 
-	request, err := http.NewRequest("POST", vc.url+PROGRAMLIBRARY, body)
+	request, err := http.NewRequest("POST", vc.url+PROGRAMLIBRARY, form)
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 
 	request.Header.Set("Content-Type", writer.FormDataContentType())
 
 	response, err := vc.client.Do(request)
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		 return response.StatusCode, NewServerError(response.StatusCode, err)
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, errors.New("FAILED TO UPLOAD FILE"))
 	}
 
-	return response.StatusCode, nil
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	actions := ActionResponse[ProgramEntry]{}
+	err = json.Unmarshal(body, &actions)
+	if err != nil {
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	return NewProgramUploadResult(&actions), nil
+}
+
+func programIsValid(file string) bool {
+
+	return strings.HasSuffix(file, ".cpz") ||
+		strings.HasSuffix(file, ".zip") ||
+		strings.HasSuffix(file, ".lpz")
 }
 
 func addFormField(writer *multipart.Writer, key string, value string) {
@@ -103,17 +147,6 @@ func addFormField(writer *multipart.Writer, key string, value string) {
 	}
 }
 
-type ProgramOptions struct {
- appFile string
- name    string
- notes   string
-}
-
-func NewProgramOptions() ProgramOptions {
- return ProgramOptions{}
-}
-
-
 type ProgramLibraryResponse struct {
 	Device LibraryContext `json:"Device"`
 }
@@ -127,6 +160,8 @@ type ProgramsContext struct {
 }
 
 type ProgramsLibrary map[string]ProgramEntry
+
+type Programs []ProgramEntry
 
 type ProgramEntry struct {
 	ProgramID         int16  `json:"ProgramId"`
@@ -148,4 +183,27 @@ type ProgramEntry struct {
 	CresDBVersion     string `json:"CresDBVersion"`
 	DeviceDBVersion   string `json:"DeviceDBVersion"`
 	IncludeDATVersion string `json:"IncludeDatVersion"`
+}
+
+type ProgramUploadResult struct {
+	ProgramID    int16
+	FriendlyName string
+	Result       string
+	Code         int16
+	Success      bool
+}
+
+func NewProgramUploadResult(actions *ActionResponse[ProgramEntry]) ProgramUploadResult {
+
+	p := actions.Actions[0].Results[0].Object
+	s := actions.Actions[0].Results[0].StatusInfo
+	c := actions.Actions[0].Results[0].StatusID
+
+	return ProgramUploadResult{
+		ProgramID:    p.ProgramID,
+		FriendlyName: p.FriendlyName,
+		Result:       s,
+		Code:         c,
+		Success:      c == 0,
+	}
 }

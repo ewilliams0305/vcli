@@ -85,41 +85,20 @@ func (v *VC) Config() *VirtualConfig {
 	}
 }
 
-type ActionResponse struct {
-	Actions []ActionData `json:"Actions"`
+type ActionResponse[T any] struct {
+	Actions []ActionData[T] `json:"Actions"`
 }
 
-type ActionData struct {
-	Operation    string                 `json:"Operation"`
-	Results      []ActionResponseResult `json:"Results"`
-	TargetObject string                 `json:"TargetObject"`
-	Version      string                 `json:"Version"`
+type ActionData[T any] struct {
+	Operation    string                    `json:"Operation"`
+	Results      []ActionResponseResult[T] `json:"Results"`
+	TargetObject string                    `json:"TargetObject"`
+	Version      string                    `json:"Version"`
 }
 
-type ActionResponseResult struct {
-	Path       string         `json:"path"`
-	Object     ActionRoomData `json:"object"`
-	StatusInfo string         `json:"StatusInfo"`
-	StatusID   int64          `json:"StatusId"`
-}
-
-type ActionRoomData struct {
-	ID                  int64  `json:"id"`
-	ProgramInstanceID   string `json:"programInstanceId"`
-	ProgramLibraryID    int64  `json:"ProgramLibraryId"`
-	UserFile            string `json:"UserFile"`
-	Status              string `json:"Status"`
-	Name                string `json:"Name"`
-	Level               string `json:"level"`
-	AddressSetsLocation bool   `json:"AddressSetsLocation"`
-	Location            string `json:"Location"`
-	Longitude           string `json:"Longitude"`
-	Latitude            string `json:"Latitude"`
-	TimeZone            string `json:"TimeZone"`
-	ConfigurationLink   string `json:"ConfigurationLink"`
-	ProcessID           string `json:"ProcessId"`
-	XpanelURL           string `json:"XpanelUrl"`
-	ProgramSlotID       int64  `json:"ProgramSlotId"`
-	Notes               string `json:"Notes"`
-	DebuggingEnabled    bool   `json:"DebuggingEnabled"`
+type ActionResponseResult[T any] struct {
+	Path       string `json:"path"`
+	Object     T      `json:"object"`
+	StatusInfo string `json:"StatusInfo"`
+	StatusID   int16  `json:"StatusId"`
 }
