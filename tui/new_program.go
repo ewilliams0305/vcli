@@ -83,9 +83,9 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
   case tea.KeyMsg:
 		 switch msg.String() {
-
-		 case "esc":
-			 return ReturnToPrograms(), tea.Batch(tick, QueryPrograms)
+		   case "esc":
+			    return ReturnToPrograms(), tea.Batch(tick, QueryPrograms)
+   }
  }
  
 	form, cmd := m.form.Update(msg)
@@ -115,18 +115,18 @@ func (m NewProgramForm) View() string {
  if m.result != nil {
   s += "\n\n" + m.result.Code
   // DISPLAY RESULT HERE AND MAYBE NO FORM
- } 
+ }
  return s
 }
 
 func SumbitNewProgramForm(f *huh.Form) tea.Cmd{
    if f == huh.StateCompleted {
-
+ 
 			return CreateNewProgram(options)(vc.ProgramOptions{
 				AppFile: f.GetString("FILE"),
 				Name:    f.GetString("NAME"),
 				Notes:   f.GetString("NOTES"),
-			})
+ 			})
   }
 }
 
