@@ -70,13 +70,14 @@ func (m NewProgramForm) Init() tea.Cmd {
 
 func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
+ 
 	form, cmd := m.form.Update(msg)
 	if f, ok := form.(*huh.Form); ok {
 		m.form = f
 
 		if m.form.State == huh.StateCompleted {
 
-			return InitialProgramsModel(200, 200), SubmitNewProgram(vc.ProgramOptions{
+			return ReturnToPrograms(), SubmitNewProgram(vc.ProgramOptions{
 				AppFile: m.form.GetString("FILE"),
 				Name:    m.form.GetString("NAME"),
 				Notes:   m.form.GetString("NOTES"),
