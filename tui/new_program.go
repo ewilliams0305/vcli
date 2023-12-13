@@ -116,7 +116,6 @@ func (m NewProgramForm) View() string {
   s += "\n\n" + m.result.Code
   // DISPLAY RESULT HERE AND MAYBE NO FORM
  } 
- 
  return s
 }
 
@@ -128,6 +127,7 @@ func SumbitNewProgramForm(f *huh.Form) tea.Cmd{
 				Name:    f.GetString("NAME"),
 				Notes:   f.GetString("NOTES"),
 			})
+  }
 }
 
 func SubmitNewProgram(options vc.ProgramOptions) tea.Cmd {
