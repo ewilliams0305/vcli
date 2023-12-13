@@ -18,6 +18,7 @@ type ProgramsModel struct {
 	selected      vc.ProgramEntry
 	err           error
 	help          programsHelpModel
+	uploadResult  vc.ProgramUploadResult
 	busy          busy
 	cursor        int
 	width, height int
@@ -68,7 +69,9 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.table, cmd = m.table.Update(msg)
 		return m, cmd
 
-	case ProgramLoadResult:
+	case vc.ProgramUploadResult:
+
+		m.uploadResult = msg
 		//last := len(m.Programs)
 		//m.cursor = last
 		//m.selected = m.Programs[last]
@@ -111,13 +114,9 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "ctrl+n":
 			if m.err == nil {
-				return m, tea.Batch(ShowBusyMessage("Uploading new program files"), CreateNewProgram)
+				form := NewProgramFormModel()
+				return form, form.Init()
 			}
-
-		case "ctrl+d":
-			// if m.err == nil {
-			// 	return m, cmdRoomDebug(m.selectedRoom.ID, !m.selectedRoom.Debugging)
-			// }
 
 		}
 	}
@@ -176,19 +175,20 @@ func getProgramColumns(width int) []table.Column {
 		return []table.Column{
 			{Title: "", Width: 1},
 			{Title: "Name", Width: 20},
-			{Title: "App", Width: width - 49},
-			{Title: "Notes", Width: 8},
-			{Title: "Rooms", Width: 8},
+			{Title: "App File", Width: 35},
+			{Title: "Notes", Width: width - 49},
+			{Title: "Type", Width: 12},
 		}
 	}
 	return []table.Column{
 		{Title: "", Width: 1},
 		{Title: "Name", Width: 20},
 		{Title: "App File", Width: 35},
-		{Title: "Project", Width: 35},
-		{Title: "Configuration", Width: width - 141},
-		{Title: "Notes", Width: 16},
-		{Title: "Rooms", Width: 8},
+		{Title: "Notes", Width: width - 154},
+		{Title: "Type", Width: 16},
+		{Title: "Compiled", Width: 32},
+		{Title: "Crestron DB", Width: 16},
+		{Title: "Device DB", Width: 16},
 	}
 }
 
@@ -202,9 +202,9 @@ func getProgramRows(width int, cursor int, Programs vc.Programs) []table.Row {
 			marker = "\u2192"
 		}
 		if small {
-			rows = append(rows, table.Row{marker, prog.FriendlyName, prog.AppFile, prog.Notes, "#"})
+			rows = append(rows, table.Row{marker, prog.FriendlyName, prog.AppFile, prog.Notes, prog.ProgramType})
 		} else {
-			rows = append(rows, table.Row{marker, prog.FriendlyName, prog.AppFile, prog.Notes, prog.ProgramType, "#", "#"})
+			rows = append(rows, table.Row{marker, prog.FriendlyName, prog.AppFile, prog.Notes, prog.ProgramType, prog.CompileDateTime, prog.CresDBVersion, prog.DeviceDBVersion})
 		}
 	}
 	return rows
@@ -255,17 +255,11 @@ func ProgramsQuery() tea.Msg {
 	return programs
 }
 
-func CreateNewProgram() tea.Msg {
+func CreateNewProgram(options vc.ProgramOptions) tea.Msg {
 
-	result, err := server.CreateProgram(vc.ProgramOptions{
-		AppFile: "C:/Users/ewilliams/source/repos/Cenero-App-Kit/release/Programs/Cenero.Video.Nvx.Producer.cpz",
-		Name:    "NVX Producer",
-		Notes:   "Cenero's SIMPL Sharp NVX Program",
-	})
+	result, err := server.CreateProgram(options)
 	if err != nil {
 		return err
 	}
-	return ProgramLoadResult(result)
+	return result
 }
-
-type ProgramLoadResult int

@@ -100,5 +100,5 @@ type ActionResponseResult[T any] struct {
 	Path       string `json:"path"`
 	Object     T      `json:"object"`
 	StatusInfo string `json:"StatusInfo"`
-	StatusID   int64  `json:"StatusId"`
+	StatusID   int16  `json:"StatusId"`
 }

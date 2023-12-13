@@ -20,7 +20,7 @@ const (
 
 type VcProgramApi interface {
 	GetPrograms() (Programs, VirtualControlError)
-	CreateProgram(options ProgramOptions) (status int, err VirtualControlError)
+	CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError)
 }
 
 func (v *VC) GetPrograms() (Programs, VirtualControlError) {
@@ -43,7 +43,7 @@ func (v *VC) GetPrograms() (Programs, VirtualControlError) {
 	return p, nil
 }
 
-func (v *VC) CreateProgram(options ProgramOptions) (status int, err VirtualControlError) {
+func (v *VC) CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError) {
 	return postProgram(v, options)
 }
 
@@ -59,15 +59,15 @@ func getProgramLibrary(vc *VC) (ProgramsLibrary, VirtualControlError) {
 }
 
 // UPLOADS A NEW PROGRAM TO THE APPLIANCE
-func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
+func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, err error) {
 
 	if !programIsValid(options.AppFile) {
-		return 0, errors.New("INVALID FILE EXTENSION")
+		return ProgramUploadResult{}, errors.New("INVALID FILE EXTENSION")
 	}
 
 	file, err := os.Open(options.AppFile)
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 	defer file.Close()
 
@@ -76,12 +76,12 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 
 	part, err := writer.CreateFormFile("AppFile", filepath.Base(options.AppFile))
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 
 	_, err = io.Copy(part, file)
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 
 	file.Close()
@@ -92,38 +92,38 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 
 	err = writer.Close()
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 
 	request, err := http.NewRequest("POST", vc.url+PROGRAMLIBRARY, form)
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 
 	request.Header.Set("Content-Type", writer.FormDataContentType())
 
 	response, err := vc.client.Do(request)
 	if err != nil {
-		return 0, err
+		return ProgramUploadResult{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		return response.StatusCode, NewServerError(response.StatusCode, errors.New("FAILED TO UPLOAD FILE"))
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, errors.New("FAILED TO UPLOAD FILE"))
 	}
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return response.StatusCode, NewServerError(response.StatusCode, err)
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
 	}
 
 	actions := ActionResponse[ProgramEntry]{}
 	err = json.Unmarshal(body, &actions)
 	if err != nil {
-		return 500, NewServerError(response.StatusCode, err)
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
 	}
 
-	return response.StatusCode, NewServerError(response.StatusCode, errors.New("FILE FAILED TO UPLOAD"))
+	return NewProgramUploadResult(&actions), nil
 }
 
 func programIsValid(file string) bool {
@@ -183,4 +183,27 @@ type ProgramEntry struct {
 	CresDBVersion     string `json:"CresDBVersion"`
 	DeviceDBVersion   string `json:"DeviceDBVersion"`
 	IncludeDATVersion string `json:"IncludeDatVersion"`
+}
+
+type ProgramUploadResult struct {
+	ProgramID    int16
+	FriendlyName string
+	Result       string
+	Code         int16
+	Success      bool
+}
+
+func NewProgramUploadResult(actions *ActionResponse[ProgramEntry]) ProgramUploadResult {
+
+	p := actions.Actions[0].Results[0].Object
+	s := actions.Actions[0].Results[0].StatusInfo
+	c := actions.Actions[0].Results[0].StatusID
+
+	return ProgramUploadResult{
+		ProgramID:    p.ProgramID,
+		FriendlyName: p.FriendlyName,
+		Result:       s,
+		Code:         c,
+		Success:      c == 0,
+	}
 }
