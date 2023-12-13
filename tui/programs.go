@@ -12,6 +12,8 @@ import (
 	vc "github.com/ewilliams0305/VC4-CLI/vc"
 )
 
+var programs *ProgramsModel
+
 type ProgramsModel struct {
 	table         table.Model
 	Programs      vc.Programs
@@ -25,7 +27,7 @@ type ProgramsModel struct {
 }
 
 func InitialProgramsModel(width, height int) *ProgramsModel {
-	return &ProgramsModel{
+	programs = &ProgramsModel{
 		Programs: vc.Programs{},
 		selected: vc.ProgramEntry{},
 		cursor:   0,
@@ -33,6 +35,7 @@ func InitialProgramsModel(width, height int) *ProgramsModel {
 		width:    width,
 		height:   height,
 	}
+ return programs
 }
 
 func BusyProgramsModel(b busy, Programs vc.Programs) *ProgramsModel {
