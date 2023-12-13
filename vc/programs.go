@@ -5,6 +5,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -117,13 +118,26 @@ func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, er
 		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
 	}
 
-	actions := ActionResponse[ProgramEntry]{}
+	actions := ActionResponse[any]{}
 	err = json.Unmarshal(body, &actions)
 	if err != nil {
 		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
 	}
 
-	return NewProgramUploadResult(&actions), nil
+	actionResult := actions.Actions[0].Results[0]
+
+	// UHM THIS IS A WAY WAY BROKEN REST API
+	if actionResult.StatusID != 0 {
+		return ProgramUploadResult{}, fmt.Errorf("FAILED UPLOADING NEW PROGRAM \n\nREASON: %s", actionResult.StatusInfo)
+	}
+
+	actionProgram := ActionResponse[ProgramEntry]{}
+	err = json.Unmarshal(body, &actionProgram)
+	if err != nil {
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	return NewProgramUploadResult(&actionProgram), nil
 }
 
 func programIsValid(file string) bool {

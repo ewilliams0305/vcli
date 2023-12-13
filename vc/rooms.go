@@ -57,7 +57,7 @@ func mapRoomsToPrograms(instances ProgramInstanceLibrary, library ProgramsLibrar
 			roomsModel = append(roomsModel, NewRoom(r, prog))
 			continue
 		}
-		return roomsModel, fmt.Errorf("Room %s has no matching code %s, WTF!", r.ProgramInstanceID, r.ProgramInstanceID)
+		return roomsModel, fmt.Errorf("Room %s has no matching code %s, WTF", r.ProgramInstanceID, r.ProgramInstanceID)
 	}
 
 	comparById := func(a, b Room) int {
