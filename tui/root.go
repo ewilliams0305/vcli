@@ -99,9 +99,6 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.err = msg
 
 	case tea.KeyMsg:
-
-		//TODO: Change these to match the keys in the help.go file
-
 		// THE MESSAGE IS A KEYPRESS
 		switch msg.String() {
 
@@ -132,9 +129,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.state = rooms
 			return InitialRoomsModel(m.width, m.height), RoomCommand
 
-		case "p":
+		case "p", "ctrl+p":
 			m.state = programs
-			return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
+			return InitialProgramsModel(m.width, m.height), DeviceInfoCommand
 		}
 
 	}
@@ -184,7 +181,7 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 	switch m.cursor {
 	case int(programs):
 		m.state = programs
-		return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
+		return InitialProgramsModel(m.width, m.height), ProgramsQuery
 
 	case int(rooms):
 		m.state = rooms

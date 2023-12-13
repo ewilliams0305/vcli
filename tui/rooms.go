@@ -24,11 +24,6 @@ type RoomsTableModel struct {
 	width, height int
 }
 
-type busy struct {
-	flag    bool
-	message string
-}
-
 func InitialRoomsModel(width, height int) *RoomsTableModel {
 	return &RoomsTableModel{
 		rooms:        vc.Rooms{},
@@ -156,8 +151,8 @@ func (m RoomsTableModel) View() string {
 
 func newRoomsTable(rooms vc.Rooms, cursor int, width int) table.Model {
 
-	columns := getColumns(width)
-	rows := getRows(width, cursor, rooms)
+	columns := getRoomsColumns(width)
+	rows := getRoomsRows(width, cursor, rooms)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -183,7 +178,7 @@ func newRoomsTable(rooms vc.Rooms, cursor int, width int) table.Model {
 	return t
 }
 
-func getColumns(width int) []table.Column {
+func getRoomsColumns(width int) []table.Column {
 
 	if width < 120 {
 
@@ -207,7 +202,7 @@ func getColumns(width int) []table.Column {
 	}
 }
 
-func getRows(width int, cursor int, rooms vc.Rooms) []table.Row {
+func getRoomsRows(width int, cursor int, rooms vc.Rooms) []table.Row {
 	rows := []table.Row{}
 	small := width < 120
 
