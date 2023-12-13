@@ -10,9 +10,9 @@ import (
 )
 
 type NewProgramForm struct {
-	form *huh.Form // huh.Form is just a tea.Model
- result *vc.UploadProgramResult
- err error
+	form   *huh.Form // huh.Form is just a tea.Model
+  result *vc.UploadProgramResult
+  err    error
 }
 
 var (
