@@ -62,7 +62,7 @@ func NewProgramFormModel() NewProgramForm {
 					Placeholder("My seemingly pointless notes").
 					Value(&notes),
 			),
-		),
+		).WithTheme(huh.ThemeDracula()),
 	}
 }
 
@@ -85,6 +85,20 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			return ReturnToPrograms(), tea.Batch(tick, ProgramsQuery)
+
+		case "ctrl+n":
+
+			fileName = ""
+			filePath = ""
+			notes = ""
+			form := NewProgramFormModel()
+			return form, form.Init()
+
+		case "ctrl+q":
+
+			form := NewProgramFormModel()
+			return form, form.Init()
+
 		}
 	}
 
