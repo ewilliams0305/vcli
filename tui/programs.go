@@ -38,6 +38,16 @@ func InitialProgramsModel(width, height int) *ProgramsModel {
  return programs
 }
 
+func ReturnToPrograms() ProgramsModel {
+
+	w, h, _ := term.GetSize(int(os.Stdout.Fd()))
+
+	programs.width = w
+	programs.height = h
+
+	return *programs
+}
+
 func BusyProgramsModel(b busy, Programs vc.Programs) *ProgramsModel {
 	return &ProgramsModel{
 		busy:     b,
