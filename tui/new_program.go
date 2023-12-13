@@ -69,7 +69,11 @@ func (m NewProgramForm) Init() tea.Cmd {
 }
 
 func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+ switch msg := msg.(type) {
+	 case vc.ProgramUploadResult:
+   // GOT A NEW PROGRAM LOADED RESULT; RENDER AND RETURN
 
+ }
  
 	form, cmd := m.form.Update(msg)
 	if f, ok := form.(*huh.Form); ok {
