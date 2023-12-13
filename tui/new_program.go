@@ -11,6 +11,8 @@ import (
 
 type NewProgramForm struct {
 	form *huh.Form // huh.Form is just a tea.Model
+ result *vc.UploadProgramResult
+ err error
 }
 
 var (
@@ -72,7 +74,18 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
  switch msg := msg.(type) {
 	 case vc.ProgramUploadResult:
    // GOT A NEW PROGRAM LOADED RESULT; RENDER AND RETURN
+   m.result = *msg
+   return m, nil
+  
+  case error:
+   m.err = msg
+   return m, nil
 
+  case tea.KeyMsg:
+		 switch msg.String() {
+
+		 case "esc":
+			 return ReturnToPrograms(), tea.Batch(tick, QueryPrograms)
  }
  
 	form, cmd := m.form.Update(msg)
@@ -93,7 +106,28 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m NewProgramForm) View() string {
-	return m.form.View()
+ s:= m.form.View()
+
+ if m.err != nil {
+  s += "\n\n" m.err.Error()
+ }
+ 
+ if m.result != nil {
+  s += "\n\n" + m.result.Code
+  // DISPLAY RESULT HERE AND MAYBE NO FORM
+ } 
+ 
+ return s
+}
+
+func SumbitNewProgramForm(f *huh.Form) tea.Cmd{
+   if f == huh.StateCompleted {
+
+			return CreateNewProgram(options)(vc.ProgramOptions{
+				AppFile: f.GetString("FILE"),
+				Name:    f.GetString("NAME"),
+				Notes:   f.GetString("NOTES"),
+			})
 }
 
 func SubmitNewProgram(options vc.ProgramOptions) tea.Cmd {
