@@ -10,7 +10,9 @@ import (
 )
 
 type NewProgramForm struct {
-	form *huh.Form // huh.Form is just a tea.Model
+	form   *huh.Form
+	result *vc.ProgramUploadResult
+	err    error
 }
 
 var (
@@ -26,6 +28,13 @@ func validateProgramFile(file string) error {
 	return fmt.Errorf("INVALID FILE EXTENSION %s", file)
 }
 
+func validateProgramName(name string) error {
+	if len(name) < 5 {
+		return fmt.Errorf("NAME %s MUST HAVE AT LEAST 5 CHARATERS", name)
+	}
+	return nil
+}
+
 func NewProgramFormModel() NewProgramForm {
 	return NewProgramForm{
 		form: huh.NewForm(
@@ -33,26 +42,27 @@ func NewProgramFormModel() NewProgramForm {
 				huh.NewInput().
 					Key("FILE").
 					Title("Enter local file path").
-					//Prompt("📂").
-					//Placeholder("/home/user/my_progam.cpz").
+					Prompt("📂  ").
+					Placeholder("/home/user/my_progam.cpz").
 					Validate(validateProgramFile).
 					Value(&filePath),
 
 				huh.NewInput().
 					Key("NAME").
 					Title("Enter Friendly Name").
-					//Prompt("🍌").
-					//Placeholder("My friendly program name").
+					Prompt("🍌  ").
+					Placeholder("My friendly program name").
+					Validate(validateProgramName).
 					Value(&fileName),
 
 				huh.NewInput().
 					Key("NOTES").
 					Title("Enter Notes").
-					//Prompt("📝").
-					//Placeholder("My seemingly pointless notes").
+					Prompt("📝  ").
+					Placeholder("My seemingly pointless notes").
 					Value(&notes),
 			),
-		),
+		).WithTheme(huh.ThemeDracula()),
 	}
 }
 
@@ -61,6 +71,36 @@ func (m NewProgramForm) Init() tea.Cmd {
 }
 
 func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+
+	case error:
+		m.err = msg
+		return m, nil
+
+	case vc.ProgramUploadResult:
+		m.result = &msg
+		return m, nil
+
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			return ReturnToPrograms(), tea.Batch(tick, ProgramsQuery)
+
+		case "ctrl+n":
+
+			fileName = ""
+			filePath = ""
+			notes = ""
+			form := NewProgramFormModel()
+			return form, form.Init()
+
+		case "ctrl+q":
+
+			form := NewProgramFormModel()
+			return form, form.Init()
+
+		}
+	}
 
 	form, cmd := m.form.Update(msg)
 	if f, ok := form.(*huh.Form); ok {
@@ -68,15 +108,7 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.form.State == huh.StateCompleted {
 
-			path := m.form.GetString("FILE")
-			name := m.form.GetString("NAME")
-			notes := m.form.GetString("NOTES")
-
-			return InitialProgramsModel(200, 200), SubmitNewProgram(vc.ProgramOptions{
-				AppFile: path,
-				Name:    name,
-				Notes:   notes,
-			})
+			return m, SumbitNewProgramForm(m.form)
 		}
 	}
 
@@ -84,18 +116,39 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m NewProgramForm) View() string {
-	// if m.form.State == huh.StateCompleted {
-	// 	path := m.form.GetString("FILE")
-	// 	name := m.form.GetString("NAME")
-	// 	notes := m.form.GetString("NOTES")
-	// 	return fmt.Sprintf("You selected: %s, Lvl. %d", path, name, notes)
-	// }
-	return m.form.View()
+	s := m.form.View()
+
+	if m.err != nil {
+		s += RenderErrorBox("error uploading new program file", m.err)
+		s += GreyedOutText.Render("\n\n esc return * ctrl+n reset form")
+		return s
+	}
+
+	if m.result != nil {
+		var resultMessage string
+		resultMessage += "\n RESULT           " + m.result.Result
+		resultMessage += "\n\n PROGRAM ID:      " + fmt.Sprintf("%d", m.result.ProgramID)
+		resultMessage += "\n\n PROGRAM NAME:    " + m.result.FriendlyName
+		resultMessage += "\n\n STATUS CODE:     " + fmt.Sprintf("%d", m.result.Code)
+		resultMessage += "\n"
+
+		s += RenderMessageBox(1000).Render(resultMessage)
+		s += GreyedOutText.Render("\n\n esc return * ctrl+n reset form")
+	}
+	return s
 }
 
-func SubmitNewProgram(options vc.ProgramOptions) tea.Cmd {
+func SumbitNewProgramForm(f *huh.Form) tea.Cmd {
+	if f.State != huh.StateCompleted {
+		return nil
+	}
 
 	return func() tea.Msg {
+		options := vc.ProgramOptions{
+			AppFile: f.GetString("FILE"),
+			Name:    f.GetString("NAME"),
+			Notes:   f.GetString("NOTES"),
+		}
 		return CreateNewProgram(options)
 	}
 }

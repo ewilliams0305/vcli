@@ -1,8 +1,11 @@
 package tui
 
 import (
+	"os"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ewilliams0305/VC4-CLI/vc"
+	"golang.org/x/term"
 )
 
 const (
@@ -10,6 +13,7 @@ const (
 	PrimaryLight string = "#C5CAE9"
 	PrimaryDark  string = "#001F5F"
 	AccentColor  string = "#00796B"
+	ErrorColor   string = "#8A0B29"
 )
 
 var BaseStyle = lipgloss.NewStyle().
@@ -44,6 +48,25 @@ func RenderMessageBox(width int) lipgloss.Style {
 		MarginBottom(1).
 		Width(width).Align(lipgloss.Top).
 		Height(3)
+}
+
+func RenderErrorBox(header string, err error) string {
+	w, _, _ := term.GetSize(int(os.Stdout.Fd()))
+
+	s := GreyedOutText.Width(w).
+		Render("⚠ " + header + "\n")
+
+	e := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#CCCCCC")).
+		Background(lipgloss.Color(ErrorColor)).
+		PaddingTop(1).
+		PaddingLeft(1).
+		MarginBottom(1).
+		Width(w).Align(lipgloss.Top).
+		Height(3).
+		Render("\n" + err.Error() + "\n")
+	return s + e
 }
 
 func GetStatus(status string) string {

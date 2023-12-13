@@ -12,20 +12,22 @@ import (
 	vc "github.com/ewilliams0305/VC4-CLI/vc"
 )
 
+var programsView *ProgramsModel
+
 type ProgramsModel struct {
 	table         table.Model
 	Programs      vc.Programs
 	selected      vc.ProgramEntry
 	err           error
 	help          programsHelpModel
-	uploadResult  vc.ProgramUploadResult
 	busy          busy
 	cursor        int
 	width, height int
 }
 
 func InitialProgramsModel(width, height int) *ProgramsModel {
-	return &ProgramsModel{
+	programsView = &ProgramsModel{
+		table:    newProgramsTable(make(vc.Programs, 0), 0, width),
 		Programs: vc.Programs{},
 		selected: vc.ProgramEntry{},
 		cursor:   0,
@@ -33,6 +35,17 @@ func InitialProgramsModel(width, height int) *ProgramsModel {
 		width:    width,
 		height:   height,
 	}
+	return programsView
+}
+
+func ReturnToPrograms() ProgramsModel {
+
+	w, h, _ := term.GetSize(int(os.Stdout.Fd()))
+
+	programsView.width = w
+	programsView.height = h
+
+	return *programsView
 }
 
 func BusyProgramsModel(b busy, Programs vc.Programs) *ProgramsModel {
@@ -45,7 +58,7 @@ func BusyProgramsModel(b busy, Programs vc.Programs) *ProgramsModel {
 }
 
 func (m ProgramsModel) Init() tea.Cmd {
-	return DeviceInfoCommand
+	return ProgramsQuery
 }
 
 func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -69,16 +82,14 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.table, cmd = m.table.Update(msg)
 		return m, cmd
 
-	case vc.ProgramUploadResult:
-
-		m.uploadResult = msg
-		//last := len(m.Programs)
-		//m.cursor = last
-		//m.selected = m.Programs[last]
+	case vc.ProgramDeleteResult:
 		return m, HideBusyMessage
+
 	case int:
-		m.cursor = msg
-		m.selected = m.Programs[msg]
+		if msg <= len(m.Programs) {
+			m.cursor = msg
+			m.selected = m.Programs[msg]
+		}
 		return m, nil
 
 	case busy:
@@ -88,8 +99,11 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case vc.Programs:
 		m.busy = busy{flag: false}
 		m.Programs = msg
-		m.table = newProgramsTable(msg, m.cursor, m.width)
-		m.selected = msg[m.cursor]
+		if len(msg) > 0 {
+			m.table = newProgramsTable(msg, m.cursor, m.width)
+			m.selected = msg[m.cursor]
+			return m, nil
+		}
 		return m, nil
 
 	case error:
@@ -118,6 +132,14 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return form, form.Init()
 			}
 
+		case "ctrl+d":
+			if m.err == nil {
+				if m.cursor == len(m.Programs) {
+					// IF we delete the last item we are now out of bounds
+					m.cursor = m.cursor - 1
+				}
+				return m, tea.Batch(DeleteProgram(int(m.selected.ProgramID)), ShowBusyMessage("Deleting Program, please wait"))
+			}
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
@@ -130,9 +152,14 @@ func (m ProgramsModel) View() string {
 
 	if m.busy.flag {
 		s += RenderMessageBox(m.width).Render(m.busy.message)
-	} else {
+	} else if m.err == nil {
 		prog := fmt.Sprintf("\u2192 use keyboard actions to manage %s %s (ctrl+s, ctrl+d...)\n", m.selected.FriendlyName, m.selected.AppFile)
 		s += RenderMessageBox(m.width).Render(prog)
+	} else {
+		if m.err != nil {
+			s += RenderErrorBox("error performing program operation", m.err)
+			return s
+		}
 	}
 
 	s += m.help.renderHelpInfo()
@@ -195,6 +222,14 @@ func getProgramColumns(width int) []table.Column {
 func getProgramRows(width int, cursor int, Programs vc.Programs) []table.Row {
 	rows := []table.Row{}
 	small := width < 120
+
+	if len(Programs) == 0 {
+		if small {
+			rows = append(rows, table.Row{"", "No programs loaded to system, press ctl+n to a new program", "", "", "ctrl+n"})
+		} else {
+			rows = append(rows, table.Row{"", "No programs loaded to system, press ctl+n to a new program", "", "", "", "", "", "ctrl+n"})
+		}
+	}
 
 	for i, prog := range Programs {
 		marker := ""
@@ -262,4 +297,15 @@ func CreateNewProgram(options vc.ProgramOptions) tea.Msg {
 		return err
 	}
 	return result
+}
+
+func DeleteProgram(id int) tea.Cmd {
+
+	return func() tea.Msg {
+		result, err := server.DeleteProgram(id)
+		if err != nil {
+			return err
+		}
+		return result
+	}
 }
