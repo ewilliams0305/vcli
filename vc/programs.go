@@ -3,8 +3,8 @@ package vc
 import (
 	"bytes"
 	"cmp"
+	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -35,7 +35,7 @@ func (v *VC) GetPrograms() (Programs, VirtualControlError) {
 	}
 
 	comparById := func(a, b ProgramEntry) int {
-		return cmp.Compare(a.ProgramName, b.ProgramName)
+		return cmp.Compare(a.ProgramID, b.ProgramID)
 	}
 
 	slices.SortFunc(p, comparById)
@@ -117,11 +117,11 @@ func postProgram(vc *VC, options ProgramOptions) (status int, err error) {
 		return response.StatusCode, NewServerError(response.StatusCode, err)
 	}
 
-	if !strings.Contains(string(body), "SUCCESS") {
-		fmt.Printf("YAY! %+v", body)
-		return response.StatusCode, nil
+	actions := ActionResponse[ProgramEntry]{}
+	err = json.Unmarshal(body, &actions)
+	if err != nil {
+		return 500, NewServerError(response.StatusCode, err)
 	}
-	fmt.Printf("%+v", body)
 
 	return response.StatusCode, NewServerError(response.StatusCode, errors.New("FILE FAILED TO UPLOAD"))
 }

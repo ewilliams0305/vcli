@@ -59,10 +59,8 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.height = h
 		}
 
-		if m.err == nil {
-			return m, tea.Batch(ProgramsQuery, tick)
-		}
-		return m, nil
+		// TODO: handle the errors and stop the polling
+		return m, tea.Batch(ProgramsQuery, tick)
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -74,7 +72,7 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		//last := len(m.Programs)
 		//m.cursor = last
 		//m.selected = m.Programs[last]
-		return m, nil
+		return m, HideBusyMessage
 	case int:
 		m.cursor = msg
 		m.selected = m.Programs[msg]
@@ -113,7 +111,7 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "ctrl+n":
 			if m.err == nil {
-				return m, CreateNewProgram
+				return m, tea.Batch(ShowBusyMessage("Uploading new program files"), CreateNewProgram)
 			}
 
 		case "ctrl+d":
