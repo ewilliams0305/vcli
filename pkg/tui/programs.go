@@ -83,7 +83,7 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 
 	case vc.ProgramDeleteResult:
-		return m, HideBusyMessage
+		return m, tea.Batch(ProgramsQuery, tick)
 
 	case int:
 		if msg <= len(m.Programs) {

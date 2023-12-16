@@ -13,6 +13,8 @@ import (
 	vc "github.com/ewilliams0305/VC4-CLI/pkg/vc"
 )
 
+var roomsModel *RoomsTableModel
+
 type RoomsTableModel struct {
 	table         table.Model
 	rooms         vc.Rooms
@@ -25,7 +27,7 @@ type RoomsTableModel struct {
 }
 
 func InitialRoomsModel(width, height int) *RoomsTableModel {
-	return &RoomsTableModel{
+	roomsModel = &RoomsTableModel{
 		rooms:        vc.Rooms{},
 		selectedRoom: vc.Room{},
 		cursor:       0,
@@ -33,19 +35,19 @@ func InitialRoomsModel(width, height int) *RoomsTableModel {
 		width:        width,
 		height:       height,
 	}
+	return roomsModel
 }
 
 func BusyRoomsModel(b busy, rooms vc.Rooms) *RoomsTableModel {
-	return &RoomsTableModel{
-		busy:         b,
-		rooms:        rooms,
-		selectedRoom: vc.Room{},
-		cursor:       0,
-	}
+	roomsModel.busy = b
+	roomsModel.rooms = rooms
+	roomsModel.selectedRoom = vc.Room{}
+	roomsModel.cursor = 0
+	return roomsModel
 }
 
 func (m RoomsTableModel) Init() tea.Cmd {
-	return DeviceInfoCommand
+	return RoomCommand
 }
 
 func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -56,35 +58,38 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tickMsg:
 		w, h, _ := term.GetSize(int(os.Stdout.Fd()))
 		if w != m.width || h != m.height {
-			m.width = w
-			m.height = h
+			roomsModel.width = w
+			roomsModel.height = h
 		}
-		return m, tea.Batch(RoomCommand, tick)
+		return roomsModel, tea.Batch(RoomCommand, tick)
 
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
-		m.table, cmd = m.table.Update(msg)
-		return m, cmd
+		roomsModel.width = msg.Width
+		roomsModel.height = msg.Height
+		roomsModel.table, cmd = roomsModel.table.Update(msg)
+		return roomsModel, cmd
 
 	case int:
-		m.cursor = msg
-		m.selectedRoom = m.rooms[msg]
-		return m, nil
+		roomsModel.cursor = msg
+		roomsModel.selectedRoom = roomsModel.rooms[msg]
+		return roomsModel, nil
 
 	case busy:
-		m.busy = msg
-		return m, nil
+		roomsModel.busy = msg
+		return roomsModel, nil
 
 	case vc.Rooms:
-		m.busy = busy{flag: false}
-		m.rooms = msg
-		m.table = newRoomsTable(msg, m.cursor, m.width)
-		m.selectedRoom = msg[m.cursor]
-		return m, nil
+		if len(msg) > 0 {
+			roomsModel.busy = busy{flag: false}
+			roomsModel.rooms = msg
+			roomsModel.table = newRoomsTable(msg, roomsModel.cursor, roomsModel.width)
+			roomsModel.selectedRoom = msg[m.cursor]
+			return roomsModel, nil
+		}
+		return NewRoomsErrorTable(fmt.Errorf("THERE ARE NO ROOMS LOADED TO THE SYSTEM, PRESS CTRL+N TO CREATE NEW ROOM")), nil
 
 	case error:
-		m.err = msg
+		roomsModel.err = msg
 		return NewRoomsErrorTable(msg), nil
 
 	case tea.KeyMsg:
@@ -93,45 +98,45 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c", "esc":
 			return ReturnToHomeModel(rooms), tea.Batch(tick, DeviceInfoCommand)
 		case "down":
-			if m.err == nil {
-				m.table.SetCursor(m.table.Cursor() + 1)
-				return m, cmdCursor(m.table.Cursor())
+			if roomsModel.err == nil {
+				roomsModel.table.SetCursor(roomsModel.table.Cursor() + 1)
+				return roomsModel, cmdCursor(roomsModel.table.Cursor())
 			}
 		case "up":
-			if m.err == nil {
-				m.table.SetCursor(m.table.Cursor() - 1)
-				return m, cmdCursor(m.table.Cursor())
+			if roomsModel.err == nil {
+				roomsModel.table.SetCursor(roomsModel.table.Cursor() - 1)
+				return roomsModel, cmdCursor(roomsModel.table.Cursor())
 			}
 
 		case "ctrl+s":
-			if m.err == nil {
+			if roomsModel.err == nil {
 				if m.selectedRoom.Status == string(vc.Running) {
-					return m, cmdRoomStop(m.selectedRoom.ID)
-				} else if m.selectedRoom.Status == string(vc.Starting) {
-					return m, cmdRoomStop(m.selectedRoom.ID)
-				} else if m.selectedRoom.Status == string(vc.Stopped) {
-					return m, cmdRoomStart(m.selectedRoom.ID)
-				} else if m.selectedRoom.Status == string(vc.Stopping) {
-					return m, cmdRoomStart(m.selectedRoom.ID)
-				} else if m.selectedRoom.Status == string(vc.Aborted) {
-					return m, cmdRoomStart(m.selectedRoom.ID)
+					return roomsModel, cmdRoomStop(roomsModel.selectedRoom.ID)
+				} else if roomsModel.selectedRoom.Status == string(vc.Starting) {
+					return roomsModel, cmdRoomStop(roomsModel.selectedRoom.ID)
+				} else if roomsModel.selectedRoom.Status == string(vc.Stopped) {
+					return roomsModel, cmdRoomStart(roomsModel.selectedRoom.ID)
+				} else if roomsModel.selectedRoom.Status == string(vc.Stopping) {
+					return roomsModel, cmdRoomStart(roomsModel.selectedRoom.ID)
+				} else if roomsModel.selectedRoom.Status == string(vc.Aborted) {
+					return roomsModel, cmdRoomStart(roomsModel.selectedRoom.ID)
 				}
 			}
 
 		case "ctrl+r":
-			if m.err == nil {
-				return m, cmdRoomRestart(m.selectedRoom.ID)
+			if roomsModel.err == nil {
+				return roomsModel, cmdRoomRestart(roomsModel.selectedRoom.ID)
 			}
 
 		case "ctrl+d":
-			if m.err == nil {
-				return m, cmdRoomDebug(m.selectedRoom.ID, !m.selectedRoom.Debugging)
+			if roomsModel.err == nil {
+				return roomsModel, cmdRoomDebug(roomsModel.selectedRoom.ID, !roomsModel.selectedRoom.Debugging)
 			}
 
 		}
 	}
-	m.table, cmd = m.table.Update(msg)
-	return m, cmd
+	roomsModel.table, cmd = roomsModel.table.Update(msg)
+	return roomsModel, cmd
 }
 
 func (m RoomsTableModel) View() string {
@@ -220,10 +225,10 @@ func getRoomsRows(width int, cursor int, rooms vc.Rooms) []table.Row {
 	return rows
 }
 
-func NewRoomsErrorTable(msg vc.VirtualControlError) RoomsTableModel {
+func NewRoomsErrorTable(msg vc.VirtualControlError) *RoomsTableModel {
 	columns := []table.Column{
-		{Title: "SERVER ERROR", Width: 20},
-		{Title: "", Width: 100},
+		{Title: "SERVER ERROR", Width: 50},
+		{Title: "", Width: roomsModel.width - 56},
 	}
 
 	rows := []table.Row{
@@ -253,7 +258,10 @@ func NewRoomsErrorTable(msg vc.VirtualControlError) RoomsTableModel {
 		Bold(true).Italic(true)
 	t.SetStyles(s)
 
-	return RoomsTableModel{table: t, err: msg, help: NewRoomsHelpModel()}
+	roomsModel.table = t
+	roomsModel.err = msg
+
+	return roomsModel
 }
 
 func RoomCommand() tea.Msg {
