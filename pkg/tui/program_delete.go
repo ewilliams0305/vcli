@@ -39,16 +39,11 @@ func (m DeleteProgramForm) Init() tea.Cmd {
 func (m DeleteProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
-	case deleteProgramConfirmationResult:
-		if msg == 0 {
-			return ReturnToPrograms(), tea.Batch(ProgramsQuery, tick)
+	case bool:
+		if msg {
+			return ReturnToPrograms(), DeleteProgram(int(m.program.ProgramID))
 		}
-
-	case vc.ProgramDeleteResult:
-		if msg.Success {
-			return ReturnToPrograms(), tea.Batch(ProgramsQuery, tick)
-		}
-
+		return ReturnToPrograms(), tea.Batch(ProgramsQuery, tick)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "shift+tab":
@@ -65,7 +60,6 @@ func (m DeleteProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, SumbitDeleteProgramForm(&m)
 		}
 	}
-
 	return m, cmd
 }
 
@@ -78,16 +72,9 @@ func SumbitDeleteProgramForm(m *DeleteProgramForm) tea.Cmd {
 	if m.form.State != huh.StateCompleted {
 		return nil
 	}
-
-	if progDeleteConfirm {
-		return DeleteProgram(int(m.program.ProgramID))
-	}
-
-	return ReturnFromDelete
+	return deleteProgramConfirmation
 }
 
-func ReturnFromDelete() tea.Msg {
-	return deleteProgramConfirmationResult(0)
+func deleteProgramConfirmation() tea.Msg {
+	return progDeleteConfirm
 }
-
-type deleteProgramConfirmationResult int
