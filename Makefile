@@ -18,7 +18,7 @@ all: $(TARGET)
 
 # Rule to build the target executable
 $(TARGET): $(SRC)
-	$(GO) build $(GOFLAGS) -o $@
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/vcli...
 
 clean:
 	rm -f $(TARGET)
