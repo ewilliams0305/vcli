@@ -4,12 +4,11 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ewilliams0305/VC4-CLI/tui"
+	"github.com/ewilliams0305/VC4-CLI/pkg/tui"
 )
 
 func main() {
 
-	// ADD OUR COMMAND LINE ARGS
 	tui.InitFlags()
 	flag.Parse()
 

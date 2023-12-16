@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/ewilliams0305/VC4-CLI/vc"
+	"github.com/ewilliams0305/VC4-CLI/pkg/vc"
 	"golang.org/x/term"
 )
 
