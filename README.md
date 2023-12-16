@@ -87,6 +87,8 @@ As of v0.0.1 users can start, stop, enable/disable debugging, and restart rooms.
 
 ## 🧑‍💻 Programs
 
+As of v0.0.2 users can upload new program files to the system.  Nope you can't start a new room up but that'll be here soon!
+
 ## ⚖️ Authorization and Licenses
 
 ## 📲 Device mapping and status
