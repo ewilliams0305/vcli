@@ -10,7 +10,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": ".",
+            "program": "./cmd/vcli/",
             "console": "externalTerminal",
             "args": [
                 "-h", "10.0.0.111",

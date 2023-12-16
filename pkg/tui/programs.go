@@ -135,10 +135,12 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+d":
 			if m.err == nil {
 				if m.cursor == len(m.Programs) {
-					// IF we delete the last item we are now out of bounds
 					m.cursor = m.cursor - 1
 				}
-				return m, tea.Batch(DeleteProgram(int(m.selected.ProgramID)), ShowBusyMessage("Deleting Program, please wait"))
+				if len(m.Programs) > 0 {
+					return DeleteProgramFormModel(&m.selected), nil
+				}
+				return m, nil
 			}
 		}
 	}
