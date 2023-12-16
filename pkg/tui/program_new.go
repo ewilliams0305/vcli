@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
-	"github.com/ewilliams0305/VC4-CLI/vc"
+	"github.com/ewilliams0305/VC4-CLI/pkg/vc"
 )
 
 type NewProgramForm struct {
