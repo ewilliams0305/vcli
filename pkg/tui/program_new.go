@@ -12,6 +12,7 @@ import (
 type NewProgramForm struct {
 	form   *huh.Form
 	result *vc.ProgramUploadResult
+ edit   bool
 	err    error
 }
 
@@ -33,10 +34,8 @@ func validateProgramName(name string) error {
 	return nil
 }
 
-func NewProgramFormModel() NewProgramForm {
-	programOptions = &vc.ProgramOptions{}
-
-	return NewProgramForm{
+func createNewProgramForm() NewProgramForm {
+ return NewProgramForm{
 		form: huh.NewForm(
 			huh.NewGroup(
 				huh.NewInput().
@@ -64,6 +63,19 @@ func NewProgramFormModel() NewProgramForm {
 			),
 		).WithTheme(huh.ThemeDracula()),
 	}
+}
+
+func NewProgramFormModel() NewProgramForm {
+	programOptions = &vc.ProgramOptions{}
+ return createNewProgramForm()
+}
+
+func EditProgramFormModel(p *ProgramEntry) NewProgramForm {
+ programOptions = &vc.ProgramOptions{
+  AppFile : p.AppFile
+  //...
+ }
+ return createNewProgramForm()
 }
 
 func (m NewProgramForm) Init() tea.Cmd {
