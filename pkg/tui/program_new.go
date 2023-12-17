@@ -16,9 +16,7 @@ type NewProgramForm struct {
 }
 
 var (
-	filePath string
-	fileName string
-	notes    string
+	programOptions *vc.ProgramOptions
 )
 
 func validateProgramFile(file string) error {
@@ -36,6 +34,8 @@ func validateProgramName(name string) error {
 }
 
 func NewProgramFormModel() NewProgramForm {
+	programOptions = &vc.ProgramOptions{}
+
 	return NewProgramForm{
 		form: huh.NewForm(
 			huh.NewGroup(
@@ -45,7 +45,7 @@ func NewProgramFormModel() NewProgramForm {
 					Prompt("📂  ").
 					Placeholder("/home/user/my_progam.cpz").
 					Validate(validateProgramFile).
-					Value(&filePath),
+					Value(&programOptions.AppFile),
 
 				huh.NewInput().
 					Key("NAME").
@@ -53,14 +53,14 @@ func NewProgramFormModel() NewProgramForm {
 					Prompt("🍌  ").
 					Placeholder("My friendly program name").
 					Validate(validateProgramName).
-					Value(&fileName),
+					Value(&programOptions.Name),
 
 				huh.NewInput().
 					Key("NOTES").
 					Title("Enter Notes").
 					Prompt("📝  ").
 					Placeholder("My seemingly pointless notes").
-					Value(&notes),
+					Value(&programOptions.Notes),
 			),
 		).WithTheme(huh.ThemeDracula()),
 	}
@@ -87,10 +87,10 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return ReturnToPrograms(), tea.Batch(tick, ProgramsQuery)
 
 		case "ctrl+n":
-
-			fileName = ""
-			filePath = ""
-			notes = ""
+			programOptions = &vc.ProgramOptions{}
+			// fileName = ""
+			// filePath = ""
+			// notes = ""
 			form := NewProgramFormModel()
 			return form, form.Init()
 
@@ -144,11 +144,11 @@ func SumbitNewProgramForm(f *huh.Form) tea.Cmd {
 	}
 
 	return func() tea.Msg {
-		options := vc.ProgramOptions{
-			AppFile: f.GetString("FILE"),
-			Name:    f.GetString("NAME"),
-			Notes:   f.GetString("NOTES"),
-		}
-		return CreateNewProgram(options)
+		// options := vc.ProgramOptions{
+		// 	AppFile: f.GetString("FILE"),
+		// 	Name:    f.GetString("NAME"),
+		// 	Notes:   f.GetString("NOTES"),
+		// }
+		return CreateNewProgram(*programOptions)
 	}
 }
