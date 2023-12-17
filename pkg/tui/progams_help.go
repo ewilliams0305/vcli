@@ -63,8 +63,8 @@ var programKeys = programsKeyMap{
 		key.WithHelp("ctrl+d", "delete"),
 	),
 	Edit: key.NewBinding(
-		key.WithKeys("ctrl+v"),
-		key.WithHelp("ctrl+v", "edit"),
+		key.WithKeys("ctrl+e"),
+		key.WithHelp("ctrl+e", "edit"),
 	),
 	Room: key.NewBinding(
 		key.WithKeys("ctrl+r"),

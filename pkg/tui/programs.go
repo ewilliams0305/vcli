@@ -113,7 +113,7 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 
-		case "q", "ctrl+c", "esc":
+		case "ctrl+q", "q", "ctrl+c", "esc":
 			return ReturnToHomeModel(programs), tea.Batch(tick, DeviceInfoCommand)
 		case "down":
 			if m.err == nil {
@@ -129,6 +129,12 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+n":
 			if m.err == nil {
 				form := NewProgramFormModel()
+				return form, form.Init()
+			}
+
+		case "ctrl+e", "enter":
+			if m.err == nil && len(m.selected.AppFile) > 0 {
+				form := EditProgramFormModel(&m.selected)
 				return form, form.Init()
 			}
 
@@ -295,6 +301,15 @@ func ProgramsQuery() tea.Msg {
 func CreateNewProgram(options vc.ProgramOptions) tea.Msg {
 
 	result, err := server.CreateProgram(options)
+	if err != nil {
+		return err
+	}
+	return result
+}
+
+func EditProgram(options vc.ProgramOptions) tea.Msg {
+
+	result, err := server.EditProgram(options)
 	if err != nil {
 		return err
 	}

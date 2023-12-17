@@ -22,6 +22,7 @@ const (
 type VcProgramApi interface {
 	GetPrograms() (Programs, VirtualControlError)
 	CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError)
+	EditProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError)
 	DeleteProgram(id int) (result ProgramDeleteResult, err VirtualControlError)
 }
 
@@ -151,21 +152,30 @@ func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, er
 
 func editProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, err error) {
 
-	if !programIsValid(options.AppFile) {
-		return ProgramUploadResult{}, errors.New("INVALID FILE EXTENSION")
-	}
-
 	form := &bytes.Buffer{}
 	writer := multipart.NewWriter(form)
+	defer writer.Close()
 
- addFormFile(options.AppFile, "AppFile", writer)
- 
- if len(options.MobilityFile) > 0 {
-   addFormFile(options.MobilityFile, "MobilityFile", writer)
- }
-	addFormField(writer, "filetype", "AppFile")
+	_, err = validateAndCreateFileHeader(writer, options.AppFile, "AppFile", []string{".cpz", ".lpz", ".zip"})
+	_, err = validateAndCreateFileHeader(writer, options.MobilityFile, "MobilityFile", []string{".zip", ".Core3z"})
+	_, err = validateAndCreateFileHeader(writer, options.ProjectFile, "ProjectFile", []string{".zip", "ch5z", ".vtz", ".Core3z"})
+	_, err = validateAndCreateFileHeader(writer, options.WebxPanelFile, "WebxPanelFile", []string{".zip", "ch5z", ".vtz", ".Core3z"})
+	_, err = validateAndCreateFileHeader(writer, options.CwsFile, "CwsFile", []string{".zip"})
+
+	if err != nil {
+		return ProgramUploadResult{}, err
+	}
+
+	if len(options.MobilityFile) > 0 {
+		addFormFile(options.MobilityFile, "MobilityFile", writer)
+	}
+	addFormField(writer, "ProgramId", fmt.Sprintf("%d", options.ProgramId))
 	addFormField(writer, "FriendlyName", options.Name)
 	addFormField(writer, "Notes", options.Notes)
+
+	if options.StartNow {
+		addFormField(writer, "StartNow", "true")
+	}
 
 	err = writer.Close()
 	if err != nil {
@@ -216,24 +226,6 @@ func editProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, er
 	return NewProgramUploadResult(&actionProgram), nil
 }
 
-func addFormFile(filename string, key string, form *mulitpart.Writer) error{
-file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	part, err := writer.CreateFormFile(key, filepath.Base(file))
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(part, file)
-	if err != nil {
-		return err
-	}
-}
-
 func deleteProgram(vc *VC, id int) (result ProgramDeleteResult, err error) {
 
 	request, err := http.NewRequest("DELETE", vc.url+PROGRAMLIBRARY+fmt.Sprintf("/%d", id), nil)
@@ -272,18 +264,33 @@ func programIsValid(file string) bool {
 		strings.HasSuffix(file, ".lpz")
 }
 
-func addFormField(writer *multipart.Writer, key string, value string) {
+func programFileIsFullPath(file string) bool {
+	return strings.ContainsAny(file, "/") || strings.ContainsAny(file, "\\")
+}
 
-	fieldWriter, err := writer.CreateFormField(key)
-	if err != nil {
-		//updater.Logger.Warn("Error creating form field:", err)
-		return
+func validateAndCreateFileHeader(writer *multipart.Writer, file string, key string, extensions []string) (bool, error) {
+	if !programFileIsFullPath(file) {
+		return false, nil
 	}
-	_, err = fieldWriter.Write([]byte(value))
-	if err != nil {
-		//updater.Logger.Warn("Error writing form field value:", err)
-		return
+
+	if !validateProgramExtensions(file, extensions) {
+		return false, fmt.Errorf("FILE %s HAS INVALID EXTENSION", file)
 	}
+
+	err := addFormFile(file, key, writer)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func validateProgramExtensions(file string, extensions []string) bool {
+	for _, e := range extensions {
+		if strings.HasSuffix(file, e) {
+			return true
+		}
+	}
+	return false
 }
 
 type ProgramLibraryResponse struct {
