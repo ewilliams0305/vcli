@@ -1,9 +1,13 @@
 package vc
 
 import (
+	"bytes"
 	"cmp"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"slices"
@@ -25,8 +29,8 @@ type VcRoomApi interface {
 	StopRoom(id string) (bool, VirtualControlError)
 	DebugRoom(id string, enable bool) (bool, VirtualControlError)
 	RestartRoom(id string) (bool, VirtualControlError)
+	CreateRoom(options *RoomOptions) (RoomCreatedResult, VirtualControlError)
 	// EditRoom(id string, name string, notes string) (ActionResult, VirtualControlError)
-	// AddRoom(id string) (ActionResult, VirtualControlError)
 	// DeleteRoom(id string) (ActionResult, VirtualControlError)
 }
 
@@ -82,6 +86,10 @@ func (v *VC) DebugRoom(id string, enable bool) (bool, VirtualControlError) {
 	return putRoomAction(v, id, "DebuggingEnabled", enable)
 }
 
+func (v *VC) CreateRoom(options *RoomOptions) (RoomCreatedResult, VirtualControlError) {
+	return postRoom(v, options)
+}
+
 func getProgramInstances(server *VC) (ProgramInstanceLibrary, VirtualControlError) {
 
 	var results ProgramInstanceResponse
@@ -129,6 +137,62 @@ func putRoomAction(server *VC, id string, action string, state bool) (bool, Virt
 	}
 
 	return true, nil
+}
+
+func postRoom(vc *VC, options *RoomOptions) (result RoomCreatedResult, err error) {
+
+	form := &bytes.Buffer{}
+	writer := multipart.NewWriter(form)
+
+	addFormField(writer, "Name", options.Name)
+	addFormField(writer, "ProgramInstanceId", options.ProgramInstanceId)
+	addFormField(writer, "ProgramLibraryId", fmt.Sprintf("%d", options.ProgramLibraryId))
+
+	err = writer.Close()
+	if err != nil {
+		return RoomCreatedResult{}, err
+	}
+
+	request, err := http.NewRequest("POST", vc.url+PROGRAMINSTANCES, form)
+	if err != nil {
+		return RoomCreatedResult{}, err
+	}
+
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+
+	response, err := vc.client.Do(request)
+	if err != nil {
+		return RoomCreatedResult{}, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return RoomCreatedResult{}, NewServerError(response.StatusCode, errors.New("FAILED TO UPLOAD FILE"))
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return RoomCreatedResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	actions := ActionResponse[any]{}
+	err = json.Unmarshal(body, &actions)
+	if err != nil {
+		return RoomCreatedResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	actionResult := actions.Actions[0].Results[0]
+
+	// UHM THIS IS A WAY WAY BROKEN REST API
+	if actionResult.StatusID != 0 {
+		return RoomCreatedResult{}, fmt.Errorf("FAILED UPLOADING NEW PROGRAM \n\nREASON: %s", actionResult.StatusInfo)
+	}
+
+	return RoomCreatedResult{
+		Message: actionResult.StatusInfo,
+		Code:    int(actionResult.StatusID),
+		Success: actionResult.StatusID == 0,
+	}, nil
 }
 
 type RoomStatus string
@@ -209,5 +273,19 @@ func NewRoom(i ProgramInstance, p ProgramEntry) Room {
 		ProgramType:     p.ProgramType,
 		ProgramName:     p.ProgramName,
 		CompileDateTime: p.CompileDateTime,
+	}
+}
+
+type RoomCreatedResult struct {
+	Success bool
+	Message string
+	Code    int
+}
+
+func newFailedCreatedRoom(message string) *RoomCreatedResult {
+	return &RoomCreatedResult{
+		Success: false,
+		Message: message,
+		Code:    2,
 	}
 }
