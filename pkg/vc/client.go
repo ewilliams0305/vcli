@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -102,5 +105,36 @@ func (vc *VC) getBody(url string, result any) (err VirtualControlError) {
 		return NewServerError(resp.StatusCode, err)
 	}
 
+	return nil
+}
+
+func addFormField(writer *multipart.Writer, key string, value string) {
+
+	fieldWriter, err := writer.CreateFormField(key)
+	if err != nil {
+		return
+	}
+	_, err = fieldWriter.Write([]byte(value))
+	if err != nil {
+		return
+	}
+}
+
+func addFormFile(filename string, key string, writer *multipart.Writer) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	part, err := writer.CreateFormFile(key, filepath.Base(filename))
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return err
+	}
 	return nil
 }
