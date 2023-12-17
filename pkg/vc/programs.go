@@ -49,6 +49,10 @@ func (v *VC) CreateProgram(options ProgramOptions) (result ProgramUploadResult, 
 	return postProgram(v, options)
 }
 
+func (v *VC) EditProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError) {
+	return editProgram(v, options)
+}
+
 func (v *VC) DeleteProgram(id int) (result ProgramDeleteResult, err VirtualControlError) {
 	return deleteProgram(v, id)
 }
@@ -145,7 +149,7 @@ func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, er
 	return NewProgramUploadResult(&actionProgram), nil
 }
 
-func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, err error) {
+func editProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, err error) {
 
 	if !programIsValid(options.AppFile) {
 		return ProgramUploadResult{}, errors.New("INVALID FILE EXTENSION")
