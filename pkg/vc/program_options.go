@@ -1,9 +1,15 @@
 package vc
 
 type ProgramOptions struct {
-	AppFile string
-	Name    string
-	Notes   string
+    ProgramId int
+	AppFile   string
+	Name      string
+	Notes     string
+    MobilityFile string
+    WebxPanelFile string
+    ProjectFile   string 
+    CwsFile string
+    StartNow string
 }
 
 type ProgramOptsFunc func(*ProgramOptions)
