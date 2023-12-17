@@ -145,6 +145,86 @@ func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, er
 	return NewProgramUploadResult(&actionProgram), nil
 }
 
+func postProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, err error) {
+
+	if !programIsValid(options.AppFile) {
+		return ProgramUploadResult{}, errors.New("INVALID FILE EXTENSION")
+	}
+
+	file, err := os.Open(options.AppFile)
+	if err != nil {
+		return ProgramUploadResult{}, err
+	}
+	defer file.Close()
+
+	form := &bytes.Buffer{}
+	writer := multipart.NewWriter(form)
+
+	part, err := writer.CreateFormFile("AppFile", filepath.Base(options.AppFile))
+	if err != nil {
+		return ProgramUploadResult{}, err
+	}
+
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return ProgramUploadResult{}, err
+	}
+
+	file.Close()
+
+	addFormField(writer, "filetype", "AppFile")
+	addFormField(writer, "FriendlyName", options.Name)
+	addFormField(writer, "Notes", options.Notes)
+
+	err = writer.Close()
+	if err != nil {
+		return ProgramUploadResult{}, err
+	}
+
+	request, err := http.NewRequest("PUT", vc.url+PROGRAMLIBRARY, form)
+	if err != nil {
+		return ProgramUploadResult{}, err
+	}
+
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+
+	response, err := vc.client.Do(request)
+	if err != nil {
+		return ProgramUploadResult{}, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, errors.New("FAILED TO UPLOAD FILE"))
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	actions := ActionResponse[any]{}
+	err = json.Unmarshal(body, &actions)
+	if err != nil {
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	actionResult := actions.Actions[0].Results[0]
+
+	// UHM THIS IS A WAY WAY BROKEN REST API
+	if actionResult.StatusID != 0 {
+		return ProgramUploadResult{}, fmt.Errorf("FAILED UPLOADING NEW PROGRAM \n\nREASON: %s", actionResult.StatusInfo)
+	}
+
+	actionProgram := ActionResponse[ProgramEntry]{}
+	err = json.Unmarshal(body, &actionProgram)
+	if err != nil {
+		return ProgramUploadResult{}, NewServerError(response.StatusCode, err)
+	}
+
+	return NewProgramUploadResult(&actionProgram), nil
+}
+
 func deleteProgram(vc *VC, id int) (result ProgramDeleteResult, err error) {
 
 	request, err := http.NewRequest("DELETE", vc.url+PROGRAMLIBRARY+fmt.Sprintf("/%d", id), nil)
