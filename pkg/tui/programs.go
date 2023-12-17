@@ -90,7 +90,8 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.cursor = msg
 			m.selected = m.Programs[msg]
 		}
-		return m, nil
+		_, cmd := m.table.Update(msg)
+		return m, cmd
 
 	case busy:
 		m.busy = msg
@@ -205,13 +206,13 @@ func newProgramsTable(Programs vc.Programs, cursor int, width int) table.Model {
 
 func getProgramColumns(width int) []table.Column {
 
-	if width < 120 {
+	if width < 200 {
 
 		return []table.Column{
 			{Title: "", Width: 1},
 			{Title: "Name", Width: 20},
 			{Title: "App File", Width: 35},
-			{Title: "Notes", Width: width - 49},
+			{Title: "Notes", Width: width - 80},
 			{Title: "Type", Width: 12},
 		}
 	}
@@ -229,7 +230,7 @@ func getProgramColumns(width int) []table.Column {
 
 func getProgramRows(width int, cursor int, Programs vc.Programs) []table.Row {
 	rows := []table.Row{}
-	small := width < 120
+	small := width < 200
 
 	if len(Programs) == 0 {
 		if small {
