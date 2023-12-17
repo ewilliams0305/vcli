@@ -3,17 +3,21 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/ewilliams0305/VC4-CLI/pkg/vc"
 )
 
 type NewProgramForm struct {
-	form   *huh.Form
-	result *vc.ProgramUploadResult
-	err    error
-	edit   bool
+	form     *huh.Form
+	result   *vc.ProgramUploadResult
+	progress progress.Model
+	running  bool
+	err      error
+	edit     bool
 }
 
 var programOptions *vc.ProgramOptions
@@ -35,7 +39,12 @@ func validateProgramName(name string) error {
 func NewProgramFormModel() NewProgramForm {
 	programOptions = &vc.ProgramOptions{}
 
+	p := progress.New(progress.WithDefaultGradient())
+	p.Width = program.width
+
 	return NewProgramForm{
+		progress: p,
+		running:  false,
 		form: huh.NewForm(
 			huh.NewGroup(
 				huh.NewInput().
@@ -93,20 +102,25 @@ func NewProgramFormModel() NewProgramForm {
 	}
 }
 
-func EditProgramFormModel(program *vc.ProgramEntry) NewProgramForm {
+func EditProgramFormModel(programEntry *vc.ProgramEntry) NewProgramForm {
 	programOptions = &vc.ProgramOptions{
-		ProgramId:     int(program.ProgramID),
-		AppFile:       program.AppFile,
-		Name:          program.FriendlyName,
-		Notes:         program.Notes,
-		MobilityFile:  program.MobilityFile,
-		WebxPanelFile: program.WebxPanelFile,
-		CwsFile:       program.CwsFile,
+		ProgramId:     int(programEntry.ProgramID),
+		AppFile:       programEntry.AppFile,
+		Name:          programEntry.FriendlyName,
+		Notes:         programEntry.Notes,
+		MobilityFile:  programEntry.MobilityFile,
+		WebxPanelFile: programEntry.WebxPanelFile,
+		CwsFile:       programEntry.CwsFile,
 		StartNow:      false,
 	}
 
+	p := progress.New(progress.WithDefaultGradient())
+	p.Width = program.width
+
 	return NewProgramForm{
-		edit: true,
+		edit:     true,
+		running:  false,
+		progress: p,
 		form: huh.NewForm(
 			huh.NewGroup(
 				huh.NewInput().
@@ -179,9 +193,28 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.err = msg
 		return m, nil
 
+	case tea.WindowSizeMsg:
+		m.progress.Width = msg.Width - 20
+		//if m.progress.Width > maxWidth {
+		//	m.progress.Width = maxWidth
+		//}
+		return m, nil
+
 	case vc.ProgramUploadResult:
 		m.result = &msg
-		return m, nil
+		return m, m.progress.IncrPercent(1.0)
+
+	case progress.FrameMsg:
+		progressModel, cmd := m.progress.Update(msg)
+		m.progress = progressModel.(progress.Model)
+		return m, cmd
+
+	case progressTick:
+		if m.progress.Percent() == 1.0 {
+			//form := NewProgramFormModel()
+			return m, nil
+		}
+		return m, tea.Batch(programUploadTickCmd(), m.progress.IncrPercent(0.20))
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -199,8 +232,9 @@ func (m NewProgramForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if f, ok := form.(*huh.Form); ok {
 		m.form = f
 
-		if m.form.State == huh.StateCompleted {
-			return m, SumbitNewProgramForm(&m)
+		if m.form.State == huh.StateCompleted && !m.running {
+			m.running = true
+			return m, tea.Batch(SumbitNewProgramForm(&m), programUploadTickCmd())
 		}
 	}
 	return m, cmd
@@ -213,8 +247,12 @@ func (m NewProgramForm) View() string {
 	} else {
 		s += GreyedOutText.Render("\n🆕 Create New Program Entry\n")
 	}
+
 	s += "\n" + m.form.View()
 
+	if m.progress.Percent() != 0.0 {
+		s += "\n" + m.progress.View() + "\n\n"
+	}
 	if m.err != nil {
 		s += RenderErrorBox("error uploading new program file", m.err)
 		s += GreyedOutText.Render("\n\n esc return * ctrl+n reset form")
@@ -230,8 +268,12 @@ func (m NewProgramForm) View() string {
 		resultMessage += "\n"
 
 		s += RenderMessageBox(1000).Render(resultMessage)
+
+		//s += "\n" + m.progress.View() + "\n\n"
+
 		s += GreyedOutText.Render("\n\n esc return * ctrl+n reset form")
 	}
+
 	return s
 }
 
@@ -245,4 +287,12 @@ func SumbitNewProgramForm(m *NewProgramForm) tea.Cmd {
 		}
 		return CreateNewProgram(*programOptions)
 	}
+}
+
+type progressTick time.Time
+
+func programUploadTickCmd() tea.Cmd {
+	return tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
+		return progressTick(t)
+	})
 }

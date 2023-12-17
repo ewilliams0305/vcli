@@ -3,8 +3,8 @@ module github.com/ewilliams0305/VC4-CLI
 go 1.21.3
 
 require (
-	github.com/charmbracelet/bubbles v0.16.1
-	github.com/charmbracelet/bubbletea v0.24.2
+	github.com/charmbracelet/bubbles v0.17.1
+	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	golang.org/x/term v0.13.0
 )
@@ -15,6 +15,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/charmbracelet/glamour v0.6.0 // indirect
+	github.com/charmbracelet/harmonica v0.2.0 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.25 // indirect
