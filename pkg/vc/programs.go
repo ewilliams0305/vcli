@@ -155,27 +155,14 @@ func editProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, er
 		return ProgramUploadResult{}, errors.New("INVALID FILE EXTENSION")
 	}
 
-	file, err := os.Open(options.AppFile)
-	if err != nil {
-		return ProgramUploadResult{}, err
-	}
-	defer file.Close()
-
 	form := &bytes.Buffer{}
 	writer := multipart.NewWriter(form)
 
-	part, err := writer.CreateFormFile("AppFile", filepath.Base(options.AppFile))
-	if err != nil {
-		return ProgramUploadResult{}, err
-	}
-
-	_, err = io.Copy(part, file)
-	if err != nil {
-		return ProgramUploadResult{}, err
-	}
-
-	file.Close()
-
+ addFormFile(options.AppFile, "AppFile", writer)
+ 
+ if len(options.MobilityFile) > 0 {
+   addFormFile(options.MobilityFile, "MobilityFile", writer)
+ }
 	addFormField(writer, "filetype", "AppFile")
 	addFormField(writer, "FriendlyName", options.Name)
 	addFormField(writer, "Notes", options.Notes)
@@ -227,6 +214,24 @@ func editProgram(vc *VC, options ProgramOptions) (result ProgramUploadResult, er
 	}
 
 	return NewProgramUploadResult(&actionProgram), nil
+}
+
+func addFormFile(filename string, key string, form *mulitpart.Writer) error{
+file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	part, err := writer.CreateFormFile(key, filepath.Base(file))
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return err
+	}
 }
 
 func deleteProgram(vc *VC, id int) (result ProgramDeleteResult, err error) {
