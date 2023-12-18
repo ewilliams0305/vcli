@@ -149,6 +149,16 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, nil
 			}
+		case "ctrl+r":
+			if m.err == nil {
+				if m.cursor == len(m.Programs) {
+					m.cursor = m.cursor - 1
+				}
+				if len(m.Programs) > 0 {
+					return m, CreateNewRoomFromProgram(&m.selected)
+				}
+				return m, nil
+			}
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
@@ -321,6 +331,19 @@ func DeleteProgram(id int) tea.Cmd {
 
 	return func() tea.Msg {
 		result, err := server.DeleteProgram(id)
+		if err != nil {
+			return err
+		}
+		return result
+	}
+}
+
+func CreateNewRoomFromProgram(program *vc.ProgramEntry) tea.Cmd {
+
+	return func() tea.Msg {
+
+		ops := vc.NewRoomOptions(183, "HELLO", "HELLO")
+		result, err := server.CreateRoom(&ops)
 		if err != nil {
 			return err
 		}
