@@ -289,8 +289,6 @@ func SumbitNewProgramForm(m *NewProgramForm) tea.Cmd {
 	}
 }
 
-type progressTick time.Time
-
 func programUploadTickCmd() tea.Cmd {
 	return tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
 		return progressTick(t)

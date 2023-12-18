@@ -343,3 +343,24 @@ func cmdCursor(cursor int) tea.Cmd {
 		return cursor
 	}
 }
+
+func CreateRoom(options *vc.RoomOptions) tea.Cmd {
+
+	return func() tea.Msg {
+		result, err := server.CreateRoom(options)
+		if err != nil {
+			return err
+		}
+		return result
+	}
+}
+func EditRoom(options *vc.RoomOptions) tea.Cmd {
+
+	return func() tea.Msg {
+		result, err := server.EditRoom(options)
+		if err != nil {
+			return err
+		}
+		return result
+	}
+}
