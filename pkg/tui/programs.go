@@ -155,7 +155,7 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.cursor = m.cursor - 1
 				}
 				if len(m.Programs) > 0 {
-					return m, CreateNewRoomFromProgram(&m.selected)
+					return NewRoomFromProgramFormModel(&m.selected), nil
 				}
 				return m, nil
 			}
@@ -331,19 +331,6 @@ func DeleteProgram(id int) tea.Cmd {
 
 	return func() tea.Msg {
 		result, err := server.DeleteProgram(id)
-		if err != nil {
-			return err
-		}
-		return result
-	}
-}
-
-func CreateNewRoomFromProgram(program *vc.ProgramEntry) tea.Cmd {
-
-	return func() tea.Msg {
-
-		ops := vc.NewRoomOptions(183, "HELLO", "HELLO")
-		result, err := server.CreateRoom(&ops)
 		if err != nil {
 			return err
 		}

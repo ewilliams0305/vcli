@@ -40,7 +40,7 @@ func NewProgramFormModel() NewProgramForm {
 	programOptions = &vc.ProgramOptions{}
 
 	p := progress.New(progress.WithDefaultGradient())
-	p.Width = program.width
+	p.Width = app.width
 
 	return NewProgramForm{
 		progress: p,
@@ -115,7 +115,7 @@ func EditProgramFormModel(programEntry *vc.ProgramEntry) NewProgramForm {
 	}
 
 	p := progress.New(progress.WithDefaultGradient())
-	p.Width = program.width
+	p.Width = app.width
 
 	return NewProgramForm{
 		edit:     true,
@@ -288,8 +288,6 @@ func SumbitNewProgramForm(m *NewProgramForm) tea.Cmd {
 		return CreateNewProgram(*programOptions)
 	}
 }
-
-type progressTick time.Time
 
 func programUploadTickCmd() tea.Cmd {
 	return tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {

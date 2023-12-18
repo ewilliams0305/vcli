@@ -132,7 +132,7 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, m.keys.Quit):
-			return program, tea.Batch(tick, DeviceInfoCommand)
+			return app, tea.Batch(tick, DeviceInfoCommand)
 		}
 
 		switch msg.String() {

@@ -34,7 +34,7 @@ const (
 	helpState appState = 6
 )
 
-var program *MainModel
+var app *MainModel
 
 type MainModel struct {
 	state         appState
@@ -49,7 +49,7 @@ type MainModel struct {
 func InitialModel() MainModel {
 
 	w, h, _ := term.GetSize(int(os.Stdout.Fd()))
-	program = &MainModel{
+	app = &MainModel{
 		device:  vc.DeviceInfo{},
 		actions: []string{"Refresh", "Manage Programs", "Manage Rooms", "Device Information", "Devices", "Authorization", "Help"},
 		help:    NewHelpModel(),
@@ -57,19 +57,19 @@ func InitialModel() MainModel {
 		height:  h,
 	}
 
-	return *program
+	return *app
 }
 
 func ReturnToHomeModel(state appState) MainModel {
 
 	w, h, _ := term.GetSize(int(os.Stdout.Fd()))
 
-	program.width = w
-	program.height = h
-	program.state = state
-	program.cursor = int(state)
+	app.width = w
+	app.height = h
+	app.state = state
+	app.cursor = int(state)
 
-	return *program
+	return *app
 }
 
 func (m MainModel) Init() tea.Cmd {
@@ -127,7 +127,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "r", "ctrl+r":
 			m.state = rooms
-			return InitialRoomsModel(m.width, m.height), RoomCommand
+			return InitialRoomsModel(m.width, m.height), RoomsQuery
 
 		case "p", "ctrl+p":
 			m.state = programs
@@ -185,7 +185,7 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 
 	case int(rooms):
 		m.state = rooms
-		return InitialRoomsModel(m.width, m.height), RoomCommand
+		return InitialRoomsModel(m.width, m.height), RoomsQuery
 
 	case int(info):
 		m.state = info
@@ -198,7 +198,7 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 
 	}
 
-	return program, nil
+	return app, nil
 }
 
 func Run() {

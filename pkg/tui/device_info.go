@@ -52,7 +52,7 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Table.SetCursor(m.Table.Cursor() - 1)
 
 		case "r", "ctrl+r":
-			return InitialRoomsModel(m.width, m.height), RoomCommand
+			return InitialRoomsModel(m.width, m.height), RoomsQuery
 
 		}
 	}
