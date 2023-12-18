@@ -37,8 +37,19 @@ func validateRoomName(name string) error {
 	return nil
 }
 
+var originalRoomId *string
+
+func validateEditRoomId(id string) error {
+	if id != *originalRoomId {
+		return fmt.Errorf("CANNOT EDIT THE ROOM ID, VALUE MUST BE %s", *originalRoomId)
+	}
+	return nil
+}
+
 func NewRoomFormModel() NewRoomForm {
-	roomOptions = &vc.RoomOptions{}
+	roomOptions = &vc.RoomOptions{
+		AddressSetsLocation: true,
+	}
 
 	p := progress.New(progress.WithDefaultGradient())
 	p.Width = app.width
@@ -76,7 +87,9 @@ func NewRoomFormModel() NewRoomForm {
 }
 
 func NewRoomFormModelWithPrograms(programs vc.Programs) NewRoomForm {
-	roomOptions = &vc.RoomOptions{}
+	roomOptions = &vc.RoomOptions{
+		AddressSetsLocation: true,
+	}
 
 	p := progress.New(progress.WithDefaultGradient())
 	p.Width = app.width
@@ -154,7 +167,7 @@ func NewRoomFormModelWithPrograms(programs vc.Programs) NewRoomForm {
 					Title("Upload User File").
 					Prompt("👤  ").
 					Placeholder("/home/user/myconfig.json").
-					Value(&roomOptions.Longitude),
+					Value(&roomOptions.UserFile),
 			),
 		).WithTheme(huh.ThemeDracula()),
 	}
@@ -162,7 +175,8 @@ func NewRoomFormModelWithPrograms(programs vc.Programs) NewRoomForm {
 
 func NewRoomFromProgramFormModel(programEntry *vc.ProgramEntry) NewRoomForm {
 	roomOptions = &vc.RoomOptions{
-		ProgramLibraryId: int(programEntry.ProgramID),
+		ProgramLibraryId:    int(programEntry.ProgramID),
+		AddressSetsLocation: true,
 	}
 
 	p := progress.New(progress.WithDefaultGradient())
@@ -240,17 +254,24 @@ func NewRoomFromProgramFormModel(programEntry *vc.ProgramEntry) NewRoomForm {
 					Title("Upload User File").
 					Prompt("👤  ").
 					Placeholder("/home/user/myconfig.json").
-					Value(&roomOptions.Longitude),
+					Value(&roomOptions.UserFile),
 			),
 		).WithTheme(huh.ThemeDracula()),
 	}
 }
 
 func EditRoomFormModel(room *vc.Room) NewRoomForm {
+	originalRoomId = &room.ID
 	roomOptions = &vc.RoomOptions{
-		ProgramLibraryId: int(room.ProgramID),
-		Name:             room.Name,
-		Notes:            room.Notes,
+		ProgramInstanceId:   room.ID,
+		ProgramLibraryId:    int(room.ProgramID),
+		Name:                room.Name,
+		Notes:               room.Notes,
+		Location:            room.Location,
+		Latitude:            room.Latitude,
+		Longitude:           room.Longitude,
+		TimeZone:            room.TimeZone,
+		AddressSetsLocation: true,
 	}
 
 	p := progress.New(progress.WithDefaultGradient())
@@ -266,10 +287,18 @@ func EditRoomFormModel(room *vc.Room) NewRoomForm {
 				huh.NewInput().
 					Key("NAME").
 					Title("Enter Friendly Name").
-					Prompt("🖊  ").
+					Prompt("📛  ").
 					Placeholder("My friendly program name").
-					//Validate(validateProgramName).
+					Validate(validateRoomName).
 					Value(&roomOptions.Name),
+
+				huh.NewInput().
+					Key("ROOM ID").
+					Title("Enter Room ID").
+					Prompt("🆔  ").
+					Placeholder(*originalRoomId).
+					Validate(validateEditRoomId).
+					Value(&roomOptions.ProgramInstanceId),
 
 				huh.NewInput().
 					Key("NOTES").
@@ -277,6 +306,45 @@ func EditRoomFormModel(room *vc.Room) NewRoomForm {
 					Prompt("📝  ").
 					Placeholder("My seemingly pointless notes").
 					Value(&roomOptions.Notes),
+
+				huh.NewInput().
+					Key("ADDRESS").
+					Title("Location").
+					Prompt("🏚  ").
+					Placeholder("404 Bad Address Location").
+					Value(&roomOptions.Location),
+
+				huh.NewConfirm().
+					Title("Address Sets Location").
+					Value(&roomOptions.AddressSetsLocation),
+
+				huh.NewInput().
+					Key("TIMEZONE").
+					Title("Time Zone").
+					Prompt("⏲  ").
+					Placeholder("+/- numeric value").
+					Value(&roomOptions.TimeZone),
+
+				huh.NewInput().
+					Key("LAT").
+					Title("Latitude").
+					Prompt("🌐  ").
+					Placeholder("39.352862").
+					Value(&roomOptions.Latitude),
+
+				huh.NewInput().
+					Key("LONG").
+					Title("Longitude").
+					Prompt("🌐  ").
+					Placeholder("-76.407341").
+					Value(&roomOptions.Longitude),
+
+				huh.NewInput().
+					Key("USER_FILE").
+					Title("Upload User File").
+					Prompt("👤  ").
+					Placeholder("/home/user/myconfig.json").
+					Value(&roomOptions.UserFile),
 			),
 		).WithTheme(huh.ThemeDracula()),
 	}
@@ -333,8 +401,12 @@ func (m NewRoomForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.form.State == huh.StateCompleted && !m.running {
 			m.running = true
-			roomOptions.ProgramLibraryId = int(selectProg.ProgramID)
-			return m, tea.Batch(CreateRoom(*roomOptions), roomCreatedTickCmd())
+
+			if !m.edit {
+				roomOptions.ProgramLibraryId = int(selectProg.ProgramID)
+				return m, tea.Batch(CreateRoom(*roomOptions), roomCreatedTickCmd())
+			}
+			return m, tea.Batch(EditRoom(*roomOptions), roomCreatedTickCmd())
 		}
 	}
 	return m, cmd

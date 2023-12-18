@@ -154,8 +154,8 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "ctrl+e", "enter":
 			if roomsModel.err == nil {
-				// Query the programs to populate the option list for the programs!
-				return EditRoomFormModel(&roomsModel.selectedRoom), ProgramsQuery
+				form := EditRoomFormModel(&roomsModel.selectedRoom)
+				return EditRoomFormModel(&roomsModel.selectedRoom), form.Init()
 			}
 		}
 	}
