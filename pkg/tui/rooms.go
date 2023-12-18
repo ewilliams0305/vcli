@@ -38,6 +38,18 @@ func InitialRoomsModel(width, height int) *RoomsTableModel {
 	return roomsModel
 }
 
+func ReturnRoomsModel() *RoomsTableModel {
+	roomsModel = &RoomsTableModel{
+		rooms:        vc.Rooms{},
+		selectedRoom: vc.Room{},
+		cursor:       0,
+		help:         NewRoomsHelpModel(),
+		width:        app.width,
+		height:       app.width,
+	}
+	return roomsModel
+}
+
 func BusyRoomsModel(b busy, rooms vc.Rooms) *RoomsTableModel {
 	roomsModel.busy = b
 	roomsModel.rooms = rooms
@@ -47,7 +59,7 @@ func BusyRoomsModel(b busy, rooms vc.Rooms) *RoomsTableModel {
 }
 
 func (m RoomsTableModel) Init() tea.Cmd {
-	return RoomCommand
+	return RoomsQuery
 }
 
 func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -61,7 +73,7 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			roomsModel.width = w
 			roomsModel.height = h
 		}
-		return roomsModel, tea.Batch(RoomCommand, tick)
+		return roomsModel, tea.Batch(RoomsQuery, tick)
 
 	case tea.WindowSizeMsg:
 		roomsModel.width = msg.Width
@@ -95,7 +107,7 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 
-		case "q", "ctrl+c", "esc":
+		case "ctrl+q", "q", "ctrl+c", "esc":
 			return ReturnToHomeModel(rooms), tea.Batch(tick, DeviceInfoCommand)
 		case "down":
 			if roomsModel.err == nil {
@@ -136,13 +148,14 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+n":
 			if roomsModel.err == nil {
 				// Query the programs to populate the option list for the programs!
-				return NewRoomFormModel(), ProgramsQuery
+				form := NewRoomFormModel()
+				return form, tea.Batch(ProgramsQuery, form.Init())
 			}
 
 		case "ctrl+e", "enter":
 			if roomsModel.err == nil {
 				// Query the programs to populate the option list for the programs!
-				return NewRoomFormModel(), ProgramsQuery
+				return EditRoomFormModel(&roomsModel.selectedRoom), ProgramsQuery
 			}
 		}
 	}
@@ -275,7 +288,7 @@ func NewRoomsErrorTable(msg vc.VirtualControlError) *RoomsTableModel {
 	return roomsModel
 }
 
-func RoomCommand() tea.Msg {
+func RoomsQuery() tea.Msg {
 
 	info, err := server.GetRooms()
 	if err != nil {
@@ -355,7 +368,7 @@ func cmdCursor(cursor int) tea.Cmd {
 	}
 }
 
-func CreateRoom(options *vc.RoomOptions) tea.Cmd {
+func CreateRoom(options vc.RoomOptions) tea.Cmd {
 
 	return func() tea.Msg {
 		result, err := server.CreateRoom(options)
@@ -365,7 +378,7 @@ func CreateRoom(options *vc.RoomOptions) tea.Cmd {
 		return result
 	}
 }
-func EditRoom(options *vc.RoomOptions) tea.Cmd {
+func EditRoom(options vc.RoomOptions) tea.Cmd {
 
 	return func() tea.Msg {
 		result, err := server.EditRoom(options)

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/progress"
@@ -12,7 +13,7 @@ import (
 
 type NewRoomForm struct {
 	form     *huh.Form
-	result   *vc.ProgramUploadResult
+	result   *vc.RoomCreatedResult
 	progress progress.Model
 	running  bool
 	err      error
@@ -20,26 +21,27 @@ type NewRoomForm struct {
 }
 
 var roomOptions *vc.RoomOptions
+var selectProg vc.ProgramEntry
 
-// func validateProgramFile(file string) error {
-// 	if strings.HasSuffix(file, ".cpz") || strings.HasSuffix(file, ".zip") || strings.HasSuffix(file, ".lpz") {
-// 		return nil
-// 	}
-// 	return fmt.Errorf("INVALID FILE EXTENSION %s", file)
-// }
+func validateRoomId(file string) error {
+	if strings.ContainsAny(file, " !@#$%^&*()_+{}[]|\\<,>.?/") {
+		return fmt.Errorf("ROOM ID CANNOT CONTAIN SPECIAL CHARACTERS OR SPACES %s", file)
+	}
+	return nil
+}
 
-// func validateProgramName(name string) error {
-// 	if len(name) < 5 {
-// 		return fmt.Errorf("NAME %s MUST HAVE AT LEAST 5 CHARATERS", name)
-// 	}
-// 	return nil
-// }
+func validateRoomName(name string) error {
+	if len(name) < 5 {
+		return fmt.Errorf("NAME %s MUST HAVE AT LEAST 5 CHARATERS", name)
+	}
+	return nil
+}
 
 func NewRoomFormModel() NewRoomForm {
 	roomOptions = &vc.RoomOptions{}
 
 	p := progress.New(progress.WithDefaultGradient())
-	p.Width = program.width
+	p.Width = app.width
 
 	return NewRoomForm{
 		progress: p,
@@ -51,8 +53,16 @@ func NewRoomFormModel() NewRoomForm {
 					Title("Enter Friendly Name").
 					Prompt("📛  ").
 					Placeholder("My friendly program name").
-					//Validate(validateProgramName).
+					Validate(validateRoomName).
 					Value(&roomOptions.Name),
+
+				huh.NewInput().
+					Key("ROOM ID").
+					Title("Enter Room ID").
+					Prompt("🆔  ").
+					Placeholder("ROOM404").
+					Validate(validateRoomId).
+					Value(&roomOptions.ProgramInstanceId),
 
 				huh.NewInput().
 					Key("NOTES").
@@ -65,15 +75,108 @@ func NewRoomFormModel() NewRoomForm {
 	}
 }
 
-func EditRoomFormModel(programEntry *vc.ProgramEntry) NewRoomForm {
+func NewRoomFormModelWithPrograms(programs vc.Programs) NewRoomForm {
+	roomOptions = &vc.RoomOptions{}
+
+	p := progress.New(progress.WithDefaultGradient())
+	p.Width = app.width
+	progs := make([]vc.ProgramEntry, len(programs))
+	copy(progs, programs)
+
+	return NewRoomForm{
+		progress: p,
+		running:  false,
+		form: huh.NewForm(
+			huh.NewGroup(
+				huh.NewSelect[vc.ProgramEntry]().
+					Title("Select a program").
+					Options(huh.NewOptions[vc.ProgramEntry](progs...)...).
+					Value(&selectProg).
+					Description("the selected program will be instantiated"),
+
+				huh.NewInput().
+					Key("NAME").
+					Title("Enter Friendly Name").
+					Prompt("📛  ").
+					Placeholder("My friendly program name").
+					Validate(validateRoomName).
+					Value(&roomOptions.Name),
+
+				huh.NewInput().
+					Key("ROOM ID").
+					Title("Enter Room ID").
+					Prompt("🆔  ").
+					Placeholder("ROOM404").
+					Validate(validateRoomId).
+					Value(&roomOptions.ProgramInstanceId),
+
+				huh.NewInput().
+					Key("NOTES").
+					Title("Enter Notes").
+					Prompt("📝  ").
+					Placeholder("My seemingly pointless notes").
+					Value(&roomOptions.Notes),
+			),
+		).WithTheme(huh.ThemeDracula()),
+	}
+}
+
+func NewRoomFromProgramFormModel(programEntry *vc.ProgramEntry) NewRoomForm {
 	roomOptions = &vc.RoomOptions{
 		ProgramLibraryId: int(programEntry.ProgramID),
-		Name:             programEntry.FriendlyName,
-		Notes:            programEntry.Notes,
 	}
 
 	p := progress.New(progress.WithDefaultGradient())
-	p.Width = program.width
+	p.Width = app.width
+
+	return NewRoomForm{
+		progress: p,
+		running:  false,
+		form: huh.NewForm(
+			huh.NewGroup(
+
+				huh.NewSelect[vc.ProgramEntry]().
+					Title("Select a program").
+					Options(huh.NewOption[vc.ProgramEntry](programEntry.ProgramName, *programEntry)).
+					Value(&selectProg).
+					Description(fmt.Sprintf("%s program will be instantiated", programEntry.FriendlyName)),
+
+				huh.NewInput().
+					Key("NAME").
+					Title("Enter Friendly Name").
+					Prompt("📛  ").
+					Placeholder("My friendly program name").
+					Validate(validateRoomName).
+					Value(&roomOptions.Name),
+
+				huh.NewInput().
+					Key("ROOM ID").
+					Title("Enter Room ID").
+					Prompt("🆔  ").
+					Placeholder("ROOM404").
+					Validate(validateRoomId).
+					Value(&roomOptions.ProgramInstanceId),
+
+				huh.NewInput().
+					Key("NOTES").
+					Title("Enter Notes").
+					Prompt("📝  ").
+					Placeholder("My seemingly pointless notes").
+					Value(&roomOptions.Notes),
+			),
+		).WithTheme(huh.ThemeDracula()),
+	}
+}
+
+func EditRoomFormModel(room *vc.Room) NewRoomForm {
+	roomOptions = &vc.RoomOptions{
+		ProgramLibraryId: int(room.ProgramID),
+		Name:             room.Name,
+		Notes:            room.Notes,
+	}
+
+	p := progress.New(progress.WithDefaultGradient())
+	p.Width = app.width
 
 	return NewRoomForm{
 		edit:     true,
@@ -87,7 +190,7 @@ func EditRoomFormModel(programEntry *vc.ProgramEntry) NewRoomForm {
 					Title("Enter Friendly Name").
 					Prompt("🖊  ").
 					Placeholder("My friendly program name").
-					Validate(validateProgramName).
+					//Validate(validateProgramName).
 					Value(&roomOptions.Name),
 
 				huh.NewInput().
@@ -116,7 +219,11 @@ func (m NewRoomForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.progress.Width = msg.Width - 20
 		return m, nil
 
-	case vc.ProgramUploadResult:
+	case vc.Programs:
+
+		return NewRoomFormModelWithPrograms(msg), nil
+
+	case vc.RoomCreatedResult:
 		m.result = &msg
 		return m, m.progress.IncrPercent(1.0)
 
@@ -134,11 +241,11 @@ func (m NewRoomForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "ctrl+q":
-			return ReturnToPrograms(), tea.Batch(tick, ProgramsQuery)
+			return ReturnRoomsModel(), tea.Batch(tick, RoomsQuery)
 
 		case "ctrl+n":
 			form := NewRoomFormModel()
-			return form, form.Init()
+			return form, tea.Batch(form.Init(), ProgramsQuery)
 		}
 	}
 
@@ -148,7 +255,8 @@ func (m NewRoomForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.form.State == huh.StateCompleted && !m.running {
 			m.running = true
-			return m, tea.Batch(SumbitNewRoomForm(&m), roomCreatedTickCmd())
+			roomOptions.ProgramLibraryId = int(selectProg.ProgramID)
+			return m, tea.Batch(CreateRoom(*roomOptions), roomCreatedTickCmd())
 		}
 	}
 	return m, cmd
@@ -175,9 +283,7 @@ func (m NewRoomForm) View() string {
 
 	if m.result != nil {
 		var resultMessage string
-		resultMessage += "\n RESULT           " + m.result.Result
-		resultMessage += "\n\n PROGRAM ID:      " + fmt.Sprintf("%d", m.result.ProgramID)
-		resultMessage += "\n\n PROGRAM NAME:    " + m.result.FriendlyName
+		resultMessage += "\n RESULT           " + m.result.Message
 		resultMessage += "\n\n STATUS CODE:     " + fmt.Sprintf("%d", m.result.Code)
 		resultMessage += "\n"
 
@@ -186,18 +292,6 @@ func (m NewRoomForm) View() string {
 	}
 
 	return s
-}
-
-func SumbitNewRoomForm(m *NewRoomForm) tea.Cmd {
-	if m.form.State != huh.StateCompleted {
-		return nil
-	}
-	return func() tea.Msg {
-		if m.edit {
-			return EditRoom(roomOptions)
-		}
-		return CreateRoom(roomOptions)
-	}
 }
 
 func roomCreatedTickCmd() tea.Cmd {

@@ -29,8 +29,8 @@ type VcRoomApi interface {
 	StopRoom(id string) (bool, VirtualControlError)
 	DebugRoom(id string, enable bool) (bool, VirtualControlError)
 	RestartRoom(id string) (bool, VirtualControlError)
-	CreateRoom(options *RoomOptions) (RoomCreatedResult, VirtualControlError)
-	EditRoom(options *RoomOptions) (RoomCreatedResult, VirtualControlError)
+	CreateRoom(options RoomOptions) (RoomCreatedResult, VirtualControlError)
+	EditRoom(options RoomOptions) (RoomCreatedResult, VirtualControlError)
 	DeleteRoom(id string) VirtualControlError
 }
 
@@ -86,11 +86,11 @@ func (v *VC) DebugRoom(id string, enable bool) (bool, VirtualControlError) {
 	return putRoomAction(v, id, "DebuggingEnabled", enable)
 }
 
-func (v *VC) CreateRoom(options *RoomOptions) (RoomCreatedResult, VirtualControlError) {
+func (v *VC) CreateRoom(options RoomOptions) (RoomCreatedResult, VirtualControlError) {
 	return postRoom(v, options)
 }
 
-func (v *VC) EditRoom(options *RoomOptions) (RoomCreatedResult, VirtualControlError) {
+func (v *VC) EditRoom(options RoomOptions) (RoomCreatedResult, VirtualControlError) {
 	return putRoom(v, options)
 }
 
@@ -147,7 +147,7 @@ func putRoomAction(server *VC, id string, action string, state bool) (bool, Virt
 	return true, nil
 }
 
-func postRoom(vc *VC, options *RoomOptions) (result RoomCreatedResult, err error) {
+func postRoom(vc *VC, options RoomOptions) (result RoomCreatedResult, err error) {
 
 	form := &bytes.Buffer{}
 	writer := multipart.NewWriter(form)
@@ -193,7 +193,7 @@ func postRoom(vc *VC, options *RoomOptions) (result RoomCreatedResult, err error
 
 	// UHM THIS IS A WAY WAY BROKEN REST API
 	if actionResult.StatusID != 0 {
-		return RoomCreatedResult{}, fmt.Errorf("FAILED UPLOADING NEW PROGRAM \n\nREASON: %s", actionResult.StatusInfo)
+		return RoomCreatedResult{}, fmt.Errorf("FAILED CREATING NEW PROGRAM INSTANCE\n\nREASON: %s", actionResult.StatusInfo)
 	}
 
 	return RoomCreatedResult{
@@ -203,7 +203,7 @@ func postRoom(vc *VC, options *RoomOptions) (result RoomCreatedResult, err error
 	}, nil
 }
 
-func putRoom(vc *VC, options *RoomOptions) (result RoomCreatedResult, err error) {
+func putRoom(vc *VC, options RoomOptions) (result RoomCreatedResult, err error) {
 
 	form := &bytes.Buffer{}
 	writer := multipart.NewWriter(form)
@@ -249,7 +249,7 @@ func putRoom(vc *VC, options *RoomOptions) (result RoomCreatedResult, err error)
 
 	// UHM THIS IS A WAY WAY BROKEN REST API
 	if actionResult.StatusID != 0 {
-		return RoomCreatedResult{}, fmt.Errorf("FAILED UPLOADING NEW PROGRAM \n\nREASON: %s", actionResult.StatusInfo)
+		return RoomCreatedResult{}, fmt.Errorf("FAILED CREATING NEW PROGRAM INSTANCE\n\nREASON: %s", actionResult.StatusInfo)
 	}
 
 	return RoomCreatedResult{

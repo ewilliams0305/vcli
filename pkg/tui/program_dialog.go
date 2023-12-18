@@ -40,7 +40,7 @@ func NewProgramFormModel() NewProgramForm {
 	programOptions = &vc.ProgramOptions{}
 
 	p := progress.New(progress.WithDefaultGradient())
-	p.Width = program.width
+	p.Width = app.width
 
 	return NewProgramForm{
 		progress: p,
@@ -115,7 +115,7 @@ func EditProgramFormModel(programEntry *vc.ProgramEntry) NewProgramForm {
 	}
 
 	p := progress.New(progress.WithDefaultGradient())
-	p.Width = program.width
+	p.Width = app.width
 
 	return NewProgramForm{
 		edit:     true,
