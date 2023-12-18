@@ -116,6 +116,45 @@ func NewRoomFormModelWithPrograms(programs vc.Programs) NewRoomForm {
 					Prompt("📝  ").
 					Placeholder("My seemingly pointless notes").
 					Value(&roomOptions.Notes),
+
+				huh.NewInput().
+					Key("ADDRESS").
+					Title("Location").
+					Prompt("🏚  ").
+					Placeholder("404 Bad Address Location").
+					Value(&roomOptions.Location),
+
+				huh.NewConfirm().
+					Title("Address Sets Location").
+					Value(&roomOptions.AddressSetsLocation),
+
+				huh.NewInput().
+					Key("TIMEZONE").
+					Title("Time Zone").
+					Prompt("⏲  ").
+					Placeholder("+/- numeric value").
+					Value(&roomOptions.TimeZone),
+
+				huh.NewInput().
+					Key("LAT").
+					Title("Latitude").
+					Prompt("🌐  ").
+					Placeholder("39.352862").
+					Value(&roomOptions.Latitude),
+
+				huh.NewInput().
+					Key("LONG").
+					Title("Longitude").
+					Prompt("🌐  ").
+					Placeholder("-76.407341").
+					Value(&roomOptions.Longitude),
+
+				huh.NewInput().
+					Key("USER_FILE").
+					Title("Upload User File").
+					Prompt("👤  ").
+					Placeholder("/home/user/myconfig.json").
+					Value(&roomOptions.Longitude),
 			),
 		).WithTheme(huh.ThemeDracula()),
 	}
@@ -163,6 +202,45 @@ func NewRoomFromProgramFormModel(programEntry *vc.ProgramEntry) NewRoomForm {
 					Prompt("📝  ").
 					Placeholder("My seemingly pointless notes").
 					Value(&roomOptions.Notes),
+
+				huh.NewInput().
+					Key("ADDRESS").
+					Title("Location").
+					Prompt("🏚  ").
+					Placeholder("404 Bad Address Location").
+					Value(&roomOptions.Location),
+
+				huh.NewConfirm().
+					Title("Address Sets Location").
+					Value(&roomOptions.AddressSetsLocation),
+
+				huh.NewInput().
+					Key("TIMEZONE").
+					Title("Time Zone").
+					Prompt("⏲  ").
+					Placeholder("+/- numeric value").
+					Value(&roomOptions.TimeZone),
+
+				huh.NewInput().
+					Key("LAT").
+					Title("Latitude").
+					Prompt("🌐  ").
+					Placeholder("39.352862").
+					Value(&roomOptions.Latitude),
+
+				huh.NewInput().
+					Key("LONG").
+					Title("Longitude").
+					Prompt("🌐  ").
+					Placeholder("-76.407341").
+					Value(&roomOptions.Longitude),
+
+				huh.NewInput().
+					Key("USER_FILE").
+					Title("Upload User File").
+					Prompt("👤  ").
+					Placeholder("/home/user/myconfig.json").
+					Value(&roomOptions.Longitude),
 			),
 		).WithTheme(huh.ThemeDracula()),
 	}

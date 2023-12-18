@@ -151,10 +151,25 @@ func postRoom(vc *VC, options RoomOptions) (result RoomCreatedResult, err error)
 
 	form := &bytes.Buffer{}
 	writer := multipart.NewWriter(form)
+	defer writer.Close()
 
+	add := "false"
+	if options.AddressSetsLocation {
+		add = "true"
+	}
 	addFormField(writer, "Name", options.Name)
 	addFormField(writer, "ProgramInstanceId", options.ProgramInstanceId)
+	addFormField(writer, "Location", options.Location)
+	addFormField(writer, "TimeZone", options.TimeZone)
+	addFormField(writer, "Latitude", options.Latitude)
+	addFormField(writer, "Longitude", options.Longitude)
+	addFormField(writer, "AddressSetsLocation", add)
 	addFormField(writer, "ProgramLibraryId", fmt.Sprintf("%d", options.ProgramLibraryId))
+
+	_, err = validateAndCreateFileHeader(writer, options.UserFile, "UserFile", []string{".zip", ".csv", ".json", ".cfg", ".txt"})
+	if err != nil {
+		return RoomCreatedResult{}, err
+	}
 
 	err = writer.Close()
 	if err != nil {
