@@ -133,6 +133,17 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return roomsModel, cmdRoomDebug(roomsModel.selectedRoom.ID, !roomsModel.selectedRoom.Debugging)
 			}
 
+		case "ctrl+n":
+			if roomsModel.err == nil {
+				// Query the programs to populate the option list for the programs!
+				return NewRoomFormModel(), ProgramsQuery
+			}
+
+		case "ctrl+e", "enter":
+			if roomsModel.err == nil {
+				// Query the programs to populate the option list for the programs!
+				return NewRoomFormModel(), ProgramsQuery
+			}
 		}
 	}
 	roomsModel.table, cmd = roomsModel.table.Update(msg)
