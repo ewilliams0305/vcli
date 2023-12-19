@@ -205,7 +205,7 @@ func Run() {
 
 	server = initServer()
 
-	// TODO: Process addtional flags to send instant actions to the device.
+	// TODO: Process additional flags to send instant actions to the device.
 	p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("VC4 CLI failed to start, there's been an error: %v", err)

@@ -11,7 +11,7 @@ var (
 	// The API token generated from the VC4 webpage, this is required to control an external appliance
 	Token string
 
-	// The room id passed into the application. providing a room id creates addtional options that can be leveraged to process room actions
+	// The room id passed into the application. providing a room id creates additional options that can be leveraged to process room actions
 	RoomID string
 	// Program file path passed into the application used to create a new program entry
 	ProgramFile string

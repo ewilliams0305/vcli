@@ -84,7 +84,7 @@ func DefaultStyles() table.Styles {
 
 func HomeDeviceInfo(info vc.DeviceInfo, width int) DeviceTableModel {
 	columns := []table.Column{
-		{Title: "SERVER INFOMATION", Width: 30},
+		{Title: "SERVER INFORMATION", Width: 30},
 		{Title: "", Width: width - 36},
 	}
 
@@ -134,7 +134,7 @@ func HomeDeviceInfo(info vc.DeviceInfo, width int) DeviceTableModel {
 
 func NewDeviceTable(info vc.DeviceInfo, width int) DeviceTableModel {
 	columns := []table.Column{
-		{Title: "SERVER INFOMATION", Width: 30},
+		{Title: "SERVER INFORMATION", Width: 30},
 		{Title: "", Width: width - 36},
 	}
 
