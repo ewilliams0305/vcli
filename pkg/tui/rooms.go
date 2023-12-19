@@ -155,7 +155,13 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+e", "enter":
 			if roomsModel.err == nil {
 				form := EditRoomFormModel(&roomsModel.selectedRoom)
-				return EditRoomFormModel(&roomsModel.selectedRoom), form.Init()
+				return form, form.Init()
+			}
+
+		case "delete":
+			if roomsModel.err == nil {
+				form := DeleteRoomFormModel(&roomsModel.selectedRoom)
+				return form, form.Init()
 			}
 		}
 	}
@@ -378,6 +384,7 @@ func CreateRoom(options vc.RoomOptions) tea.Cmd {
 		return result
 	}
 }
+
 func EditRoom(options vc.RoomOptions) tea.Cmd {
 
 	return func() tea.Msg {
@@ -386,5 +393,13 @@ func EditRoom(options vc.RoomOptions) tea.Cmd {
 			return err
 		}
 		return result
+	}
+}
+
+func DeleteRoom(id string) tea.Cmd {
+
+	return func() tea.Msg {
+		err := server.DeleteRoom(id)
+		return err
 	}
 }
