@@ -291,20 +291,10 @@ func putRoom(vc *VC, options RoomOptions) (result RoomCreatedResult, err error) 
 
 func deleteRoom(vc *VC, id string) (err error) {
 
-	form := &bytes.Buffer{}
-	writer := multipart.NewWriter(form)
-
-	err = writer.Close()
+	request, err := http.NewRequest("DELETE", vc.url+PROGRAMINSTANCES+"/"+id, nil)
 	if err != nil {
 		return err
 	}
-
-	request, err := http.NewRequest("DEL", vc.url+PROGRAMINSTANCES, form)
-	if err != nil {
-		return err
-	}
-
-	request.Header.Set("Content-Type", writer.FormDataContentType())
 
 	response, err := vc.client.Do(request)
 	if err != nil {
@@ -313,25 +303,7 @@ func deleteRoom(vc *VC, id string) (err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		return NewServerError(response.StatusCode, errors.New("FAILED TO UPLOAD FILE"))
-	}
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return NewServerError(response.StatusCode, err)
-	}
-
-	actions := ActionResponse[any]{}
-	err = json.Unmarshal(body, &actions)
-	if err != nil {
-		return NewServerError(response.StatusCode, err)
-	}
-
-	actionResult := actions.Actions[0].Results[0]
-
-	// UHM THIS IS A WAY WAY BROKEN REST API
-	if actionResult.StatusID != 0 {
-		return fmt.Errorf("FAILED UPLOADING NEW PROGRAM \n\nREASON: %s", actionResult.StatusInfo)
+		return NewServerError(response.StatusCode, fmt.Errorf("FAILED TO DELETE ROOM %s", id))
 	}
 
 	return nil

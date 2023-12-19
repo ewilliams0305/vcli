@@ -139,7 +139,7 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return form, form.Init()
 			}
 
-		case "ctrl+d":
+		case "ctrl+d", "delete":
 			if m.err == nil {
 				if m.cursor == len(m.Programs) {
 					m.cursor = m.cursor - 1
