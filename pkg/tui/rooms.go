@@ -145,13 +145,6 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return roomsModel, cmdRoomDebug(roomsModel.selectedRoom.ID, !roomsModel.selectedRoom.Debugging)
 			}
 
-		case "ctrl+n":
-			if roomsModel.err == nil {
-				// Query the programs to populate the option list for the programs!
-				form := NewRoomFormModel()
-				return form, tea.Batch(ProgramsQuery, form.Init())
-			}
-
 		case "ctrl+e", "enter":
 			if roomsModel.err == nil {
 				form := EditRoomFormModel(&roomsModel.selectedRoom)
@@ -163,6 +156,10 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				form := DeleteRoomFormModel(&roomsModel.selectedRoom)
 				return form, form.Init()
 			}
+
+		case "ctrl+n":
+			form := NewRoomFormModel()
+			return form, tea.Batch(ProgramsQuery, form.Init())
 		}
 	}
 	roomsModel.table, cmd = roomsModel.table.Update(msg)
