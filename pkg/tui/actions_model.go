@@ -73,9 +73,14 @@ func (m ActionsModel) Init() tea.Cmd {
 		cmd = CreateProgramAction(ops)
 	}
 
-	// if m.action == createRoom {
-	// 	state = rooms
-	// }
+	if m.action == createRoom {
+		ops := &vc.RoomOptions{
+			Name:              RoomID,
+			ProgramInstanceId: RoomID,
+			ProgramLibraryId:  186,
+		}
+		cmd = CreateRoomAction(ops)
+	}
 
 	// if m.action == loadAndCreate {
 	// 	state = rooms
@@ -93,6 +98,14 @@ func (m ActionsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case vc.ProgramUploadResult:
 		r := actionResult{
 			message: msg.FriendlyName,
+			status:  int(msg.Code),
+		}
+		m.results = &r
+		return m, nil
+
+	case vc.RoomCreatedResult:
+		r := actionResult{
+			message: msg.Message,
 			status:  int(msg.Code),
 		}
 		m.results = &r
@@ -159,5 +172,12 @@ func CreateProgramAction(options *vc.ProgramOptions) tea.Cmd {
 
 	return func() tea.Msg {
 		return CreateNewProgram(*options)
+	}
+}
+
+func CreateRoomAction(options *vc.RoomOptions) tea.Cmd {
+
+	return func() tea.Msg {
+		return CreateRoom(*options)
 	}
 }
