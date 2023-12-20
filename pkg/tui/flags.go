@@ -39,8 +39,8 @@ func InitFlags() {
 	flag.StringVar(&RoomID, "room", "", roomFlagUsage)
 	flag.StringVar(&RoomID, "r", "", roomFlagUsage+" (shorthand)")
 
-	flag.StringVar(&ProgramFile, "program", "", progFlagUsage)
-	flag.StringVar(&ProgramFile, "p", "", progFlagUsage+" (shorthand)")
+	flag.StringVar(&ProgramFile, "file", "", progFlagUsage)
+	flag.StringVar(&ProgramFile, "f", "", progFlagUsage+" (shorthand)")
 
 	flag.StringVar(&ProgramName, "name", "", nameFagUsage)
 	flag.StringVar(&ProgramName, "n", "", nameFagUsage+" (shorthand)")

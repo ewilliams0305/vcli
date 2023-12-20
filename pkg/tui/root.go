@@ -3,7 +3,6 @@ package tui
 import (
 	"fmt"
 	"os"
-	"path"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -228,13 +227,10 @@ func initServer() vc.VirtualControl {
 
 func initActions() (tea.Model, error) {
 
-	if len(ProgramFile) > 0 && len(ProgramName) == 0 {
-		// We have  a program flag
-		server.CreateProgram(vc.ProgramOptions{
-			AppFile: ProgramFile,
-			Name:    path.Base(ProgramFile),
-		})
+	if len(ProgramFile) > 0 && len(ProgramName) > 0 {
+		return InitialActionModel(fmt.Sprintf("Loading new program %s", ProgramFile), loadProgram), nil
 	}
+
 	return InitialModel(), nil
 }
 
