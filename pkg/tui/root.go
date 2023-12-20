@@ -236,11 +236,9 @@ func initActions() (tea.Model, error) {
 	if len(RoomID) > 0 && len(ProgramFile) == 0 {
 		return InitialActionModel(fmt.Sprintf("Creating new room %s", RoomID), createRoom), nil
 	}
-
 	if len(ProgramFile) > 0 && len(ProgramName) > 0 {
 		return InitialActionModel(fmt.Sprintf("Loading new program %s", ProgramFile), loadProgram), nil
 	}
-
 	return InitialModel(), nil
 }
 
