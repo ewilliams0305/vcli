@@ -71,20 +71,29 @@ func (m ActionsModel) Init() tea.Cmd {
 			Name:    ProgramName,
 		}
 		cmd = CreateProgramAction(ops)
+		return tea.Batch(cmd, actionsTickCmd())
 	}
 
-	if m.action == createRoom {
-		ops := &vc.RoomOptions{
-			Name:              RoomID,
-			ProgramInstanceId: RoomID,
-			ProgramLibraryId:  186,
+	if m.action == loadAndCreate {
+
+		//t := time.Now()
+		//zone, offset := t.Zone()
+
+		///fmt.Print(offset)
+
+		pops := &vc.ProgramOptions{
+			AppFile: ProgramFile,
+			Name:    ProgramName,
 		}
-		cmd = CreateRoomAction(ops)
+		rops := &vc.RoomOptions{
+			Name:                RoomID,
+			ProgramInstanceId:   RoomID,
+			AddressSetsLocation: true,
+			//TimeZone:            zone,
+		}
+		cmd = CreateAndRunRoomAction(pops, rops)
+		return tea.Batch(cmd, actionsTickCmd())
 	}
-
-	// if m.action == loadAndCreate {
-	// 	state = rooms
-	// }
 
 	return tea.Batch(cmd, actionsTickCmd())
 }
@@ -175,9 +184,20 @@ func CreateProgramAction(options *vc.ProgramOptions) tea.Cmd {
 	}
 }
 
+func CreateAndRunRoomAction(progOps *vc.ProgramOptions, roomOps *vc.RoomOptions) tea.Cmd {
+
+	return func() tea.Msg {
+		return CreateAndRunProgram(progOps, roomOps)
+	}
+}
+
 func CreateRoomAction(options *vc.RoomOptions) tea.Cmd {
 
 	return func() tea.Msg {
 		return CreateRoom(*options)
 	}
+}
+
+func CreateErrorAction() tea.Msg {
+	return fmt.Errorf("FAILED TO PROCESS THE APPLICATION FLAGS, VALID COMBINATIONS REQUIRE -F && -N || -F && -N && -R	")
 }

@@ -24,6 +24,8 @@ type VcProgramApi interface {
 	CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError)
 	EditProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError)
 	DeleteProgram(id int) (result ProgramDeleteResult, err VirtualControlError)
+
+	CreateAndRunProgram(progOps *ProgramOptions, roomOps *RoomOptions) (result RoomCreatedResult, err VirtualControlError)
 }
 
 func (v *VC) GetPrograms() (Programs, VirtualControlError) {
@@ -48,6 +50,15 @@ func (v *VC) GetPrograms() (Programs, VirtualControlError) {
 
 func (v *VC) CreateProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError) {
 	return postProgram(v, options)
+}
+
+func (v *VC) CreateAndRunProgram(progOps *ProgramOptions, roomOps *RoomOptions) (result RoomCreatedResult, err VirtualControlError) {
+	pResult, err := v.CreateProgram(*progOps)
+	if err != nil {
+		return RoomCreatedResult{}, err
+	}
+	roomOps.ProgramLibraryId = int(pResult.ProgramID)
+	return v.CreateRoom(*roomOps)
 }
 
 func (v *VC) EditProgram(options ProgramOptions) (result ProgramUploadResult, err VirtualControlError) {

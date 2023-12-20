@@ -318,6 +318,15 @@ func CreateNewProgram(options vc.ProgramOptions) tea.Msg {
 	return result
 }
 
+func CreateAndRunProgram(progOps *vc.ProgramOptions, roomOps *vc.RoomOptions) tea.Msg {
+
+	result, err := server.CreateAndRunProgram(progOps, roomOps)
+	if err != nil {
+		return err
+	}
+	return result
+}
+
 func EditProgram(options vc.ProgramOptions) tea.Msg {
 
 	result, err := server.EditProgram(options)

@@ -233,9 +233,10 @@ func initServer() vc.VirtualControl {
 
 func initActions() (tea.Model, error) {
 
-	if len(RoomID) > 0 && len(ProgramFile) == 0 {
-		return InitialActionModel(fmt.Sprintf("Creating new room %s", RoomID), createRoom), nil
+	if len(RoomID) > 0 && len(ProgramFile) > 0 && len(ProgramName) > 0 {
+		return InitialActionModel(fmt.Sprintf("Uploading and creating new room %s", RoomID), loadAndCreate), nil
 	}
+
 	if len(ProgramFile) > 0 && len(ProgramName) > 0 {
 		return InitialActionModel(fmt.Sprintf("Loading new program %s", ProgramFile), loadProgram), nil
 	}
