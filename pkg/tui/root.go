@@ -201,12 +201,22 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 	return app, nil
 }
 
+/********************************************************
+*
+* INITIALIZE THE APP WITH FLAGS
+*
+*********************************************************/
+
 func Run() {
 
 	server = initServer()
+	initialView, err := initActions()
+	if err != nil {
+		fmt.Printf("VC4 CLI failed execute intial actions, there's been an error: %v", err)
+		os.Exit(1)
+	}
 
-	// TODO: Process additional flags to send instant actions to the device.
-	p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
+	p := tea.NewProgram(initialView, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("VC4 CLI failed to start, there's been an error: %v", err)
 		os.Exit(1)
@@ -219,6 +229,19 @@ func initServer() vc.VirtualControl {
 		return vc.NewRemoteVC(Hostname, Token)
 	}
 	return vc.NewLocalVC()
+}
+
+func initActions() (tea.Model, error) {
+
+	if len(RoomID) > 0 && len(ProgramFile) == 0 {
+		return InitialActionModel(fmt.Sprintf("Creating new room %s", RoomID), createRoom), nil
+	}
+
+	if len(ProgramFile) > 0 && len(ProgramName) > 0 {
+		return InitialActionModel(fmt.Sprintf("Loading new program %s", ProgramFile), loadProgram), nil
+	}
+
+	return InitialModel(), nil
 }
 
 /********************************************************
