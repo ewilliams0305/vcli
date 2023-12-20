@@ -76,11 +76,6 @@ func (m ActionsModel) Init() tea.Cmd {
 
 	if m.action == loadAndCreate {
 
-		//t := time.Now()
-		//zone, offset := t.Zone()
-
-		///fmt.Print(offset)
-
 		pops := &vc.ProgramOptions{
 			AppFile: ProgramFile,
 			Name:    ProgramName,
@@ -89,7 +84,6 @@ func (m ActionsModel) Init() tea.Cmd {
 			Name:                RoomID,
 			ProgramInstanceId:   RoomID,
 			AddressSetsLocation: true,
-			//TimeZone:            zone,
 		}
 		cmd = CreateAndRunRoomAction(pops, rops)
 		return tea.Batch(cmd, actionsTickCmd())
