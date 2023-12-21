@@ -3,20 +3,49 @@ package tui
 import (
 	"os/exec"
 
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type VirtualControlServiceModel struct {
 	altscreenActive bool
 	err             error
 	help            SystemsHelpModel
+	list            list.Model
 }
 
+type serviceOption struct {
+	title, desc string
+}
+
+type journalClosedMessage struct{ err error }
+
+type serviceClosedMessage struct{ err error }
+
+var docStyle = lipgloss.NewStyle().Margin(1, 2)
+
+func (i serviceOption) Title() string       { return i.title }
+func (i serviceOption) Description() string { return i.desc }
+func (i serviceOption) FilterValue() string { return i.title }
+
 func InitialSystemModel() VirtualControlServiceModel {
-	return VirtualControlServiceModel{
+
+	items := []list.Item{
+		serviceOption{title: "Stop", desc: "stops the virtual control systemd service"},
+		serviceOption{title: "Start", desc: "starts the virtual control systemd service"},
+		serviceOption{title: "Restart", desc: "restarts the virtual control systemd service"},
+		serviceOption{title: "Logs", desc: "views the virtual control service journal"},
+	}
+
+	m := VirtualControlServiceModel{
 		help:            NewSystensHelpModel(),
 		altscreenActive: true,
+		list:            list.New(items, list.NewDefaultDelegate(), 100, 20),
 	}
+
+	m.list.Title = "Virtual Control Service Actions"
+	return m
 }
 
 func (m VirtualControlServiceModel) Init() tea.Cmd {
@@ -28,20 +57,40 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 
-		case "l", "ctrl+l":
-			return m, tea.Batch(openJournal(), tea.EnterAltScreen)
-
 		case "s", "ctrl+s":
-			return m, tea.Batch(stopService(), tea.EnterAltScreen)
-
+			if m.list.FilterState() != list.Filtering {
+				return m, tea.Batch(stopService(), openJournal(), tea.EnterAltScreen)
+			}
 		case "n", "ctrl+n":
-			return m, tea.Batch(startService(), tea.EnterAltScreen)
-
+			if m.list.FilterState() != list.Filtering {
+				return m, tea.Batch(startService(), openJournal(), tea.EnterAltScreen)
+			}
 		case "r", "ctrl+r":
-			return m, tea.Batch(restartService(), tea.EnterAltScreen)
-
+			if m.list.FilterState() != list.Filtering {
+				return m, tea.Batch(restartService(), openJournal(), tea.EnterAltScreen)
+			}
+		case "l", "ctrl+l":
+			if m.list.FilterState() != list.Filtering {
+				return m, tea.Batch(openJournal(), tea.EnterAltScreen)
+			}
 		case "esc", "ctrl+q", "q":
-			return ReturnToHomeModel(systemd), DeviceInfoCommand
+			if m.list.FilterState() != list.Filtering {
+				return ReturnToHomeModel(systemd), DeviceInfoCommand
+			}
+
+		case "enter":
+
+			switch m.list.Cursor() {
+			case 0:
+				return m, tea.Batch(stopService(), openJournal(), tea.EnterAltScreen)
+			case 1:
+				return m, tea.Batch(startService(), openJournal(), tea.EnterAltScreen)
+			case 2:
+				return m, tea.Batch(restartService(), openJournal(), tea.EnterAltScreen)
+			case 3:
+				return m, tea.Batch(openJournal(), tea.EnterAltScreen)
+
+			}
 		}
 
 	case error:
@@ -59,16 +108,22 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	}
-	return m, nil
+
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
 }
 
 func (m VirtualControlServiceModel) View() string {
-	s := HighlightedText.Render("\nManage the Virtual Control Service\n\n")
+	s := "\n"
+	s += docStyle.Render(m.list.View())
+	s += "\n\n\n"
 
 	if m.err != nil {
 		s += RenderErrorBox("Failed interacting with the virtual control service", m.err)
 	}
 
+	s += "\n"
 	s += m.help.renderHelpInfo()
 	return s
 }
@@ -82,26 +137,22 @@ func openJournal() tea.Cmd {
 }
 func stopService() tea.Cmd {
 
-	c := exec.Command("systemd", "stop", "virtualcontrol.service")
+	c := exec.Command("systemctl", "stop", "virtualcontrol.service")
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		return serviceClosedMessage{err}
 	})
 }
 func startService() tea.Cmd {
 
-	c := exec.Command("systemd", "start", "virtualcontrol.service")
+	c := exec.Command("systemctl", "start", "virtualcontrol.service")
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		return serviceClosedMessage{err}
 	})
 }
 func restartService() tea.Cmd {
 
-	c := exec.Command("systemd", "restart", "virtualcontrol.service")
+	c := exec.Command("systemctl", "restart", "virtualcontrol.service")
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		return serviceClosedMessage{err}
 	})
 }
-
-type journalClosedMessage struct{ err error }
-
-type serviceClosedMessage struct{ err error }

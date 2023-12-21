@@ -25,7 +25,7 @@ type serviceKeyMap struct {
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k serviceKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Quit, k.Up, k.Down, k.Start, k.Restart, k.Logs}
+	return []key.Binding{k.Quit, k.Up, k.Down, k.Start, k.Stop, k.Restart, k.Logs}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -54,11 +54,11 @@ var serviceKeys = serviceKeyMap{
 		key.WithKeys("q", "esc", "ctrl+c"),
 		key.WithHelp("q", "quit"),
 	),
-	Start: key.NewBinding(
+	Stop: key.NewBinding(
 		key.WithKeys("ctrl+s"),
 		key.WithHelp("ctrl+s", "stop service"),
 	),
-	Stop: key.NewBinding(
+	Start: key.NewBinding(
 		key.WithKeys("ctrl+n"),
 		key.WithHelp("ctrl+n", "start service"),
 	),
