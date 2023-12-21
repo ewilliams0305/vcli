@@ -30,8 +30,10 @@ const (
 	devices appState = 4
 	// AUTH VIEW, displays all auth and api tokens
 	auth appState = 5
+	// SYSTEM SERVICE VIEW, displays logs and service status
+	systemd appState = 6
 	// HELP VIEW
-	helpState appState = 6
+	helpState appState = 7
 )
 
 var app *MainModel
@@ -51,7 +53,7 @@ func InitialModel() MainModel {
 	w, h, _ := term.GetSize(int(os.Stdout.Fd()))
 	app = &MainModel{
 		device:  vc.DeviceInfo{},
-		actions: []string{"Refresh", "Manage Programs", "Manage Rooms", "Device Information", "Devices", "Authorization", "Help"},
+		actions: []string{"Refresh", "Manage Programs", "Manage Rooms", "Device Information", "Devices", "Authorization", "System Service", "Help"},
 		help:    NewHelpModel(),
 		width:   w,
 		height:  h,
@@ -132,6 +134,10 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "p", "ctrl+p":
 			m.state = programs
 			return InitialProgramsModel(m.width, m.height), DeviceInfoCommand
+
+		case "s", "ctrl+s":
+			m.state = programs
+			return InitialSystemModel(), nil
 		}
 
 	}
@@ -193,6 +199,8 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 
 	case int(auth):
 	case int(devices):
+	case int(systemd):
+		return InitialSystemModel(), nil
 	case int(helpState):
 		return NewHelpModel(), nil
 
