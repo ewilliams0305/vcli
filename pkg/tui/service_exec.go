@@ -2,8 +2,10 @@ package tui
 
 import (
 	"os/exec"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -13,6 +15,7 @@ type VirtualControlServiceModel struct {
 	err             error
 	help            SystemsHelpModel
 	list            list.Model
+	progress        progress.Model
 }
 
 type serviceOption struct {
@@ -38,10 +41,14 @@ func InitialSystemModel() VirtualControlServiceModel {
 		serviceOption{title: "Logs", desc: "views the virtual control service journal"},
 	}
 
+	prog := progress.New(progress.WithDefaultGradient())
+	prog.Width = app.width
+
 	m := VirtualControlServiceModel{
 		help:            NewSystensHelpModel(),
 		altscreenActive: true,
 		list:            list.New(items, list.NewDefaultDelegate(), 100, 20),
+		progress:        prog,
 	}
 
 	m.list.Title = "Virtual Control Service Actions"
@@ -59,15 +66,15 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "s", "ctrl+s":
 			if m.list.FilterState() != list.Filtering {
-				return m, tea.Batch(stopService(), openJournal(), tea.EnterAltScreen)
+				return m, tea.Batch(stopService(), systemTickCmd())
 			}
 		case "n", "ctrl+n":
 			if m.list.FilterState() != list.Filtering {
-				return m, tea.Batch(startService(), openJournal(), tea.EnterAltScreen)
+				return m, tea.Batch(startService(), systemTickCmd())
 			}
 		case "r", "ctrl+r":
 			if m.list.FilterState() != list.Filtering {
-				return m, tea.Batch(restartService(), openJournal(), tea.EnterAltScreen)
+				return m, tea.Batch(restartService(), systemTickCmd())
 			}
 		case "l", "ctrl+l":
 			if m.list.FilterState() != list.Filtering {
@@ -82,11 +89,11 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			switch m.list.Cursor() {
 			case 0:
-				return m, tea.Batch(stopService(), openJournal(), tea.EnterAltScreen)
+				return m, tea.Batch(stopService(), systemTickCmd())
 			case 1:
-				return m, tea.Batch(startService(), openJournal(), tea.EnterAltScreen)
+				return m, tea.Batch(startService(), systemTickCmd())
 			case 2:
-				return m, tea.Batch(restartService(), openJournal(), tea.EnterAltScreen)
+				return m, tea.Batch(restartService(), systemTickCmd())
 			case 3:
 				return m, tea.Batch(openJournal(), tea.EnterAltScreen)
 
@@ -107,6 +114,20 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = msg.err
 			return m, nil
 		}
+
+	case progress.FrameMsg:
+		progressModel, cmd := m.progress.Update(msg)
+		m.progress = progressModel.(progress.Model)
+		return m, cmd
+
+	case progressTick:
+		if m.progress.Percent() == 1.0 {
+			prog := progress.New(progress.WithDefaultGradient())
+			prog.Width = app.width
+			m.progress = prog
+			return m, tea.Batch(openJournal(), tea.EnterAltScreen)
+		}
+		return m, tea.Batch(systemTickCmd(), m.progress.IncrPercent(0.20))
 	}
 
 	var cmd tea.Cmd
@@ -123,9 +144,20 @@ func (m VirtualControlServiceModel) View() string {
 		s += RenderErrorBox("Failed interacting with the virtual control service", m.err)
 	}
 
-	s += "\n"
+	if m.progress.Percent() != 0.0 {
+		s += "\n" + m.progress.View() + "\n"
+	} else {
+		s += "\n\n\n"
+	}
+
 	s += m.help.renderHelpInfo()
 	return s
+}
+
+func systemTickCmd() tea.Cmd {
+	return tea.Tick(time.Millisecond*300, func(t time.Time) tea.Msg {
+		return progressTick(t)
+	})
 }
 
 func openJournal() tea.Cmd {
