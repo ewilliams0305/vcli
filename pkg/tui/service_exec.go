@@ -115,6 +115,9 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
+	case progress.Model:
+		m.progress = msg
+
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
 		m.progress = progressModel.(progress.Model)
@@ -122,9 +125,7 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case progressTick:
 		if m.progress.Percent() == 1.0 {
-			prog := progress.New(progress.WithDefaultGradient())
-			prog.Width = app.width
-			m.progress = prog
+			m.progress.SetPercent(0)
 			return m, tea.Batch(openJournal(), tea.EnterAltScreen)
 		}
 		return m, tea.Batch(systemTickCmd(), m.progress.IncrPercent(0.20))
@@ -159,7 +160,6 @@ func systemTickCmd() tea.Cmd {
 		return progressTick(t)
 	})
 }
-
 func openJournal() tea.Cmd {
 
 	c := exec.Command("journalctl", "-u", "virtualcontrol.service", "-f")
