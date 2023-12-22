@@ -59,10 +59,17 @@ Copy this file to your VC4 appliance and execute `chmod +x ./vcli` to allow exec
 Once compiled you can launch the application by executing the binary. 
 The application supports serveral command line argument flags
 
-`-host` or short `-h`
+`-host` or short `-h`  // Specify Host
 
-`-token` or short `t`
+`-token` or short `t`  // Provide API Key
 
+`-file` or short `f`   // Program File Path
+
+`-name` or short `n`   // Program Name
+
+`-roomid` or short `r` // Room Name
+
+## Host & Token
 If no host flag is provided the application is assumed to be executing on the VC4 appliance and localhost will be used. 
 for local host operation NO TOKEN IS REQUIRED, yes, no token. This means the cli can be instantly used without every logging into
 the VC4 webpage. 
@@ -73,6 +80,30 @@ this from one VC4 to another VC4. Lauch the app with flags;
 `./vcli -h 10.0.0.111 -t "TOKEN_HERE"`
 
 If the VC4 service is running you will instantly see the device information table loaded with data. 
+
+## Program File
+
+Programs can be uploaded to the server with a simple combination of application arguments. 
+ 
+To launch the application and instantly upload a program execute the app with:
+
+`./vcli -f /home/prog.cpz -n My Program`
+
+a new program entry will be created titled "My Program"
+
+By its self a program file flag will not execute any initial actions on the server. 
+A -f and -n flag are required. provide a full path to file on the system running the vcli app. 
+When running the app on the virtual control server the file path is mapped to a file on the server. 
+When running the application from your machine the path should be a local file on your file system. 
+
+## Room ID
+
+Appending the -r flag will upload the program and start a new room with provided room id. 
+
+`./vcli -f /home/prog.cpz -n My Program` -r UBER_ROOM
+
+A new program will be uploaded and a room will be instantly instantiated with the provided Room ID. 
+
 
 # 🦮 Guides
 Tutorials for the `vcli` providing use cases and examples 
