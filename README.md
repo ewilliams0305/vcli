@@ -111,20 +111,32 @@ Tutorials for the `vcli` providing use cases and examples
 ## 🚻 Controlling Rooms
 
 ### Start and stop rooms
-As of v0.0.1 users can start, stop, enable/disable debugging, and restart rooms.  CRUD operrations to create new rooms will be added at a later time. 
+Users can start, stop, enable/disable debugging, and restart rooms.  All room CRUD operations are availble, reate new rooms, edit, and delete. 
 ![Readme Image](./docs/rooms.gif)
 
 ### Add and remove rooms
 
 ## 🧑‍💻 Programs
 
-As of v0.0.2 users can upload new program files to the system.  Nope you can't start a new room up but that'll be here soon!
+As of v0.0.2 users can upload new program files to the system.  Users can
+create, edit, and delete program entries. users can also spin up rooms from either the program view or the room interface. 
 
 ## ⚖️ Authorization and Licenses
 
 ## 📲 Device mapping and status
 
 ## ℹ️ System information 
+
+The system view can be selected from the main menu and used to manage the 
+virtual control service. The system view provides 
+
+- real-time logs
+- start virtual control
+- stop virtual control
+- restart virtual control
+
+All system actions will redirect your terminal session to system journal output in an Alt Terminal session. 
+pressing `ctrl+c` will exit the alt T and return you to the `vcli` interface. 
 
 # 🕸️ Crestron REST API Reference 
 https://www.crestron.com/getmedia/29921c49-86df-488c-a63b-ab88620d7175/mg_pg_rest-api-crestron-virtual-control
