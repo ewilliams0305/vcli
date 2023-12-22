@@ -100,7 +100,7 @@ When running the application from your machine the path should be a local file o
 
 Appending the -r flag will upload the program and start a new room with provided room id. 
 
-`./vcli -f /home/prog.cpz -n My Program` -r UBER_ROOM
+`./vcli -f /home/prog.cpz -n My Program -r UBER_ROOM`
 
 A new program will be uploaded and a room will be instantly instantiated with the provided Room ID. 
 
