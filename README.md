@@ -115,11 +115,23 @@ Users can start, stop, enable/disable debugging, and restart rooms.  All room CR
 ![Readme Image](./docs/rooms.gif)
 
 ### Add and remove rooms
+Navigate to the rooms menu and press 'ctrl+n' to select a program from the program library.  OR, navigate to the program menu and press 'ctrl+r' to create a new room instance from the highlighted program.
+
+![CREATE ROOM](./docs/add_room.gif)
 
 ## 🧑‍💻 Programs
+Users can create, edit, and delete program entries. users can also spin up rooms from either the program view or the room interface. 
 
-As of v0.0.2 users can upload new program files to the system.  Users can
-create, edit, and delete program entries. users can also spin up rooms from either the program view or the room interface. 
+### Creating Programs
+Navigate to the program menu and press 'ctrl+n'.  Complete the form with at minumum a specified file path and a name.  Note the file path is relative the execution of the vcli, when running on you local machine file specify a file on you local file system, when running on the VC4 server specify a file path on the server.
+
+![CREATE PROGRAM](./docs/add_prog.gif)
+
+### Deleting Programs
+
+Navigate to the program menu, with the program highlighted press ctrl+d or the delete key.  When prompted selected yes to delete the program and any effected rooms.
+
+![DELETE PROGRAM](./docs/del_prog.gif)
 
 ## ⚖️ Authorization and Licenses
 
