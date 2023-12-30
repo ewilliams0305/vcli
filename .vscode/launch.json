@@ -36,7 +36,7 @@
         },
         {
             
-            "name": "Program Load",
+            "name": "Override Program Load",
             "type": "go",
             "request": "launch",
             "mode": "auto",
@@ -45,9 +45,9 @@
             "args": [
                 "-h", "10.0.0.111",
                 "-t","eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6Ijk0NDliMDM0LTcyNWEtNDM0Ny04YTMzLTc5Zjg2MDNlYjUyYiIsImx2IjoiRGVmYXVsdCBMZXZlbCIsInZlciI6IjEuMCIsImV4cGkiOiIwIn0.oMs434gmWR-x4sTGKonmndOA5F62FdzrwYZQYSGNd2A",
-                "-f", "C:\\Users\\ewilliams\\OneDrive - cenero.com\\Documents\\Projects\\Wharton\\Gacialis\\Programs\\Wharton_Glacialis_QsysCR_v3.0.0.lpz",
+                "-f", "C:\\Users\\ewilliams\\OneDrive - cenero.com\\Documents\\Projects\\WWF\\CEN22-9238\\Control Code\\9238_WWF_MPR_CP4N_v3.4.lpz",
                 "-n", "Wharton Template",
-                "-o", "true"
+                "-o"
             ],
         },
         {

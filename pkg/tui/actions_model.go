@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/progress"
@@ -178,9 +179,34 @@ func actionsTickCmd() tea.Cmd {
 
 func CreateProgramAction(options *vc.ProgramOptions) tea.Cmd {
 
-	return func() tea.Msg {
-		return CreateNewProgram(*options)
+	if !OverrideFile {
+		return func() tea.Msg {
+			return CreateNewProgram(*options)
+		}
 	}
+
+	return func() tea.Msg {
+		programs, err := server.GetPrograms()
+		if err != nil {
+			return err
+		}
+
+		var prog *vc.ProgramEntry
+		for _, p := range programs {
+			if strings.HasSuffix(options.Name, p.FriendlyName) {
+				prog = &p
+				break
+			}
+		}
+		if prog == nil {
+			return nil
+		}
+
+		options.ProgramId = int(prog.ProgramID)
+		options.StartNow = true
+		return EditProgram(*options)
+	}
+
 }
 
 func CreateAndRunRoomAction(progOps *vc.ProgramOptions, roomOps *vc.RoomOptions) tea.Cmd {
