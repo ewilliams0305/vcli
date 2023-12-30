@@ -5,6 +5,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+const (
+	BannerNormalState BannerState = iota
+	BannerErrorState  BannerState = 1
+)
+
 type BannerModel struct {
 	message string
 	state   BannerState
@@ -31,21 +36,23 @@ func (m BannerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = msg
 	case string:
 		m.message = msg
+	case error:
+		m.state = BannerErrorState
+		m.message = msg.Error()
 	}
-
 	return m, nil
 }
 
 func (m BannerModel) View() string {
-	return renderBanner(&m)
+	return renderBanner(m)
 }
 
-func renderBanner(model *BannerModel) string {
+func renderBanner(model BannerModel) string {
 	var bg lipgloss.Color
-	if model.state == 0 {
+	if model.state == BannerNormalState {
 		bg = lipgloss.Color(PrimaryDark)
 	} else {
-		bg = lipgloss.Color("#FF0000")
+		bg = lipgloss.Color(ErrorColor)
 	}
 
 	return lipgloss.NewStyle().
@@ -57,5 +64,5 @@ func renderBanner(model *BannerModel) string {
 		MarginBottom(1).
 		Width(model.width).
 		Align(lipgloss.Center).
-		Render(model.message) + "\n\n"
+		Render(model.message + "\n")
 }

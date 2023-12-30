@@ -26,6 +26,7 @@ type ActionsModel struct {
 	action   initialAction
 	progress progress.Model
 	results  *actionResult
+	banner   *BannerModel
 }
 
 type actionResult struct {
@@ -58,6 +59,7 @@ func InitialActionModel(message string, action initialAction) *ActionsModel {
 		action:   action,
 		err:      nil,
 		progress: prog,
+		banner:   NewBanner("VCLI Quick Action", 0, w),
 	}
 }
 
@@ -96,6 +98,8 @@ func (m ActionsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case error:
 		m.err = msg
+		m.banner = NewBanner(m.message, BannerErrorState, m.progress.Width)
+
 		return m, nil
 
 	case vc.ProgramUploadResult:
@@ -140,7 +144,8 @@ func (m ActionsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ActionsModel) View() string {
-	s := "\n" + m.message + "\n"
+	s := m.banner.View()
+	s += "\n" + m.message + "\n"
 
 	if m.progress.Percent() != 0.0 {
 		s += "\n" + m.progress.View() + "\n\n"
