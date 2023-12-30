@@ -16,6 +16,7 @@ type VirtualControlServiceModel struct {
 	help            SystemsHelpModel
 	list            list.Model
 	progress        progress.Model
+	banner          *BannerModel
 }
 
 type serviceOption struct {
@@ -49,6 +50,7 @@ func InitialSystemModel() VirtualControlServiceModel {
 		altscreenActive: true,
 		list:            list.New(items, list.NewDefaultDelegate(), 100, 20),
 		progress:        prog,
+		banner:          NewBanner("MANAGE VIRTUAL CONTROL SERVICE", BannerNormalState, app.width),
 	}
 
 	m.list.Title = "Virtual Control Service Actions"
@@ -78,7 +80,8 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "l", "ctrl+l":
 			if m.list.FilterState() != list.Filtering {
-				return m, tea.Batch(openJournal(), tea.EnterAltScreen)
+				return m, openJournal()
+				// return m, tea.Batch(openJournal(), tea.EnterAltScreen)
 			}
 		case "esc", "ctrl+q", "q":
 			if m.list.FilterState() != list.Filtering {
@@ -95,7 +98,8 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 2:
 				return m, tea.Batch(restartService(), systemTickCmd())
 			case 3:
-				return m, tea.Batch(openJournal(), tea.EnterAltScreen)
+				return m, openJournal()
+				// return m, tea.Batch(openJournal(), tea.EnterAltScreen)
 
 			}
 		}
@@ -126,7 +130,8 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case progressTick:
 		if m.progress.Percent() == 1.0 {
 			m.progress.SetPercent(0)
-			return m, tea.Batch(openJournal(), tea.EnterAltScreen)
+			// return m, tea.Batch(openJournal(), tea.EnterAltScreen)
+			return m, openJournal()
 		}
 		return m, tea.Batch(systemTickCmd(), m.progress.IncrPercent(0.20))
 	}
@@ -137,7 +142,7 @@ func (m VirtualControlServiceModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m VirtualControlServiceModel) View() string {
-	s := "\n"
+	s := m.banner.View() + "\n"
 	s += docStyle.Render(m.list.View())
 	s += "\n\n\n"
 
