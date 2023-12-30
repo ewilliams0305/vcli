@@ -24,6 +24,7 @@ type RoomsTableModel struct {
 	busy          busy
 	cursor        int
 	width, height int
+	banner        *BannerModel
 }
 
 func InitialRoomsModel(width, height int) *RoomsTableModel {
@@ -34,6 +35,7 @@ func InitialRoomsModel(width, height int) *RoomsTableModel {
 		help:         NewRoomsHelpModel(),
 		width:        width,
 		height:       height,
+		banner:       NewBanner("MANAGE RUNNING INSTANCES", BannerNormalState, width),
 	}
 	return roomsModel
 }
@@ -46,6 +48,7 @@ func ReturnRoomsModel() *RoomsTableModel {
 		help:         NewRoomsHelpModel(),
 		width:        app.width,
 		height:       app.width,
+		banner:       NewBanner("MANAGE RUNNING INSTANCES", BannerNormalState, app.width),
 	}
 	return roomsModel
 }
@@ -167,7 +170,7 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m RoomsTableModel) View() string {
-	s := DisplayLogo(m.width)
+	s := m.banner.View() + "\n"
 	s += BaseStyle.Render(m.table.View()) + "\n\n"
 
 	if m.busy.flag {
@@ -190,7 +193,7 @@ func newRoomsTable(rooms vc.Rooms, cursor int, width int) table.Model {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(false),
-		table.WithHeight(9),
+		table.WithHeight(16),
 		table.WithWidth(width),
 	)
 
