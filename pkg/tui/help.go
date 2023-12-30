@@ -68,8 +68,8 @@ var Keys = keyMap{
 		key.WithHelp("?", "Show help"),
 	),
 	Quit: key.NewBinding(
-		key.WithKeys("q", "esc", "ctrl+c"),
-		key.WithHelp("q", "quit"),
+		key.WithKeys("q", "ctrl+q", "esc", "ctrl+c"),
+		key.WithHelp("ctrl+q", "return"),
 	),
 	Programs: key.NewBinding(
 		key.WithKeys("ctrl+p"),
@@ -132,7 +132,7 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, m.keys.Quit):
-			return app, tea.Batch(tick, DeviceInfoCommand)
+			return ReturnToHomeModel(helpState), tea.Batch(tick, DeviceInfoCommand)
 		}
 
 		switch msg.String() {
@@ -173,7 +173,5 @@ func (m HelpModel) View() string {
 func (m HelpModel) renderHelpInfo() string {
 
 	helpView := m.help.View(m.keys)
-	//height := 8 - strings.Count(status, "\n") - strings.Count(helpView, "\n")
-
 	return "\n" + helpView
 }
