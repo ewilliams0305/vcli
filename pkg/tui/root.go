@@ -165,19 +165,13 @@ func (m MainModel) View() string {
 		s += BaseStyle.Render(info.Table.View()) + "\n"
 	}
 
-	// Iterate over our choices
 	for i, choice := range m.actions {
-
-		// Is the cursor pointing at this choice?
 		cursor := GreyedOutText.Render("  "+" "+choice) + "\n"
 		if m.cursor == i {
 			cursor = HighlightedText.Render("\u2192"+"  "+choice) + "\n"
 		}
 		s += cursor
-
 	}
-
-	// The footer
 	s += m.help.renderHelpInfo()
 	return s
 }
@@ -185,18 +179,17 @@ func (m MainModel) View() string {
 func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 
 	switch m.cursor {
+	case 0:
+		return m, DeviceInfoCommand
 	case int(programs):
 		m.state = programs
 		return InitialProgramsModel(m.width, m.height), ProgramsQuery
-
 	case int(rooms):
 		m.state = rooms
 		return InitialRoomsModel(m.width, m.height), RoomsQuery
-
 	case int(info):
 		m.state = info
 		return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
-
 	case int(auth):
 	case int(devices):
 	case int(systemd):
