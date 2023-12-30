@@ -69,6 +69,8 @@ The application supports serveral command line argument flags
 
 `-roomid` or short `r` // Room Name
 
+`-override` or short `-o` // Overrides the program by Name if found
+
 ## Host & Token
 If no host flag is provided the application is assumed to be executing on the VC4 appliance and localhost will be used. 
 for local host operation NO TOKEN IS REQUIRED, yes, no token. This means the cli can be instantly used without every logging into
@@ -95,6 +97,8 @@ By its self a program file flag will not execute any initial actions on the serv
 A -f and -n flag are required. provide a full path to file on the system running the vcli app. 
 When running the app on the virtual control server the file path is mapped to a file on the server. 
 When running the application from your machine the path should be a local file on your file system. 
+
+when loading or better reloading a program the -o flag should be provided to edit the exiting entry and restart the effected rooms. 
 
 ## Room ID
 
