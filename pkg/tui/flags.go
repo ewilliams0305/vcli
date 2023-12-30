@@ -18,17 +18,20 @@ var (
 	RoomID string
 	// Actions include GET PUT DEL and can be used with a combination of the Room ID and program file flags
 	Action string
+	// When the -o flag is provided the application will override the provided room.
+	OverrideFile bool
 )
 
 func InitFlags() {
 	const (
-		defaultHost    = "127.0.0.1"
-		defaultToken   = ""
-		hostFlagUsage  = "The IP or hostname of the virtual control service"
-		tokenFlagUsage = "The API token generated from the VC4 webpage, this is required to control an external appliance"
-		progFlagUsage  = "An optional flag to load a program file"
-		nameFagUsage   = "An optional glag used to name the loaded program flag"
-		roomFlagUsage  = "An optional room ID used to spin up a new room"
+		defaultHost       = "127.0.0.1"
+		defaultToken      = ""
+		hostFlagUsage     = "The IP or hostname of the virtual control service"
+		tokenFlagUsage    = "The API token generated from the VC4 webpage, this is required to control an external appliance"
+		progFlagUsage     = "An optional flag to load a program file"
+		nameFagUsage      = "An optional glag used to name the loaded program flag"
+		roomFlagUsage     = "An optional room ID used to spin up a new room"
+		overrideFlagUsage = "An option flag to let the application know to override the provided program file"
 	)
 
 	flag.StringVar(&Hostname, "host", defaultHost, hostFlagUsage)
@@ -44,4 +47,7 @@ func InitFlags() {
 
 	flag.StringVar(&ProgramName, "name", "", nameFagUsage)
 	flag.StringVar(&ProgramName, "n", "", nameFagUsage+" (shorthand)")
+
+	flag.BoolVar(&OverrideFile, "override", false, overrideFlagUsage)
+	flag.BoolVar(&OverrideFile, "o", false, overrideFlagUsage+" (shorthand)")
 }
