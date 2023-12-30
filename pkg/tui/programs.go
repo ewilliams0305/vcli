@@ -22,6 +22,7 @@ type ProgramsModel struct {
 	help          programsHelpModel
 	busy          busy
 	cursor        int
+	banner        *BannerModel
 	width, height int
 }
 
@@ -34,6 +35,7 @@ func InitialProgramsModel(width, height int) *ProgramsModel {
 		help:     NewProgramsHelpModel(),
 		width:    width,
 		height:   height,
+		banner:   NewBanner("MANAGE PROGRAM LIBRARY", BannerNormalState, width),
 	}
 	return programsView
 }
@@ -72,8 +74,6 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.width = w
 			m.height = h
 		}
-
-		// TODO: handle the errors and stop the polling
 		return m, tea.Batch(ProgramsQuery, tick)
 
 	case tea.WindowSizeMsg:
@@ -166,7 +166,7 @@ func (m ProgramsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ProgramsModel) View() string {
-	s := DisplayLogo(m.width)
+	s := m.banner.View() + "\n"
 	s += BaseStyle.Render(m.table.View()) + "\n\n"
 
 	if m.busy.flag {
@@ -194,7 +194,7 @@ func newProgramsTable(Programs vc.Programs, cursor int, width int) table.Model {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(false),
-		table.WithHeight(9),
+		table.WithHeight(16),
 		table.WithWidth(width),
 	)
 
