@@ -30,6 +30,7 @@ type VirtualControl interface {
 	VcProgramApi
 	VcInfoApi
 	VcRoomApi
+	VcIpTableApi
 }
 
 type VC struct {
