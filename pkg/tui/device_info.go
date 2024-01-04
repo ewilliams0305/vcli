@@ -44,7 +44,7 @@ func (m DeviceTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "q", "ctrl+c", "esc":
+		case "q", "ctrl+q", "esc":
 			return ReturnToHomeModel(info), tea.Batch(tick, DeviceInfoCommand)
 		case "down":
 			m.Table.SetCursor(m.Table.Cursor() + 1)
