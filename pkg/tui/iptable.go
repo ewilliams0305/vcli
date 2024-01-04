@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -36,6 +37,20 @@ func InitialIpTableModel(width, height int) *IpTableModel {
 	}
 }
 
+func UpdateIpTableModel(model IpTableModel) *IpTableModel {
+	return &IpTableModel{
+		table:    newIpTableDeviceTable(model.entries, model.cursor, model.width),
+		entries:  model.entries,
+		selected: vc.IpTableEntry{},
+		help:     NewHelpModel(),
+		width:    model.width,
+		height:   model.height,
+		cursor:   model.cursor,
+		err:      model.err,
+		banner:   NewBanner(fmt.Sprintf("VIEW %s IP TABLES", model.roomId), BannerNormalState, model.width),
+	}
+}
+
 func (m IpTableModel) Init() tea.Cmd {
 	return RoomsQuery
 }
@@ -51,26 +66,27 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.width = w
 			m.height = h
 		}
-		return m, tea.Batch(IpTableQuery(m.roomId), tick)
+		return UpdateIpTableModel(m), tea.Batch(IpTableQuery(m.roomId), tick)
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
 		m.table, cmd = m.table.Update(msg)
-		return m, cmd
+		return UpdateIpTableModel(m), cmd
 
 	case int:
 		m.cursor = msg
-		return m, nil
+		return UpdateIpTableModel(m), nil
 
 	case []vc.IpTableEntry:
-		t := newIpTableDeviceTable(msg, m.cursor, m.width)
-		m.table = t
-		return m, nil
+		// t := newIpTableDeviceTable(msg, m.cursor, m.width)
+		// m.table = t
+		m.entries = msg
+		return UpdateIpTableModel(m), nil
 
 	case error:
 		m.err = msg
-		return m, nil
+		return UpdateIpTableModel(m), nil
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -80,17 +96,17 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "down":
 			if m.err == nil {
 				m.table.SetCursor(m.table.Cursor() + 1)
-				return m, cmdCursor(m.table.Cursor())
+				return UpdateIpTableModel(m), cmdCursor(m.table.Cursor())
 			}
 		case "up":
 			if m.err == nil {
 				m.table.SetCursor(m.table.Cursor() - 1)
-				return m, cmdCursor(m.table.Cursor())
+				return UpdateIpTableModel(m), cmdCursor(m.table.Cursor())
 			}
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
-	return m, cmd
+	return UpdateIpTableModel(m), cmd
 }
 
 func (m IpTableModel) View() string {
