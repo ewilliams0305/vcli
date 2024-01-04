@@ -110,6 +110,10 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 
+		case "i":
+			if roomsModel.err == nil {
+				return InitialIpTableModel(roomsModel.width, roomsModel.height), IpTableQuery(roomsModel.selectedRoom.ID)
+			}
 		case "ctrl+q", "q", "ctrl+c", "esc":
 			return ReturnToHomeModel(rooms), tea.Batch(tick, DeviceInfoCommand)
 		case "down":

@@ -1,7 +1,7 @@
 package vc
 
 const (
-	IPTABLEBYID = "ProgramInstance"
+	IPTABLEBYID = "IpTableByPID"
 )
 
 type VcIpTableApi interface {
@@ -15,7 +15,7 @@ func (v *VC) GetIpTable(roomId string) ([]IpTableEntry, VirtualControlError) {
 func getIpTable(server *VC, roomId string) ([]IpTableEntry, VirtualControlError) {
 
 	var results IpTableResponse
-	err := server.getBody(IPTABLEBYID, &results)
+	err := server.getBody(IPTABLEBYID+"/"+roomId, &results)
 
 	if err != nil {
 		return make([]IpTableEntry, 0), NewServerError(500, err)
