@@ -1,8 +1,8 @@
 package tui
 
 import (
-	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -61,27 +61,12 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case int:
 		m.cursor = msg
-		//m.selected = m.rooms[msg]
 		return m, nil
 
 	case []vc.IpTableEntry:
 		t := newIpTableDeviceTable(msg, m.cursor, m.width)
 		m.table = t
 		return m, nil
-
-	// case busy:
-	// 	m.busy = msg
-	// 	return m, nil
-
-	// case vc.Rooms:
-	// 	if len(msg) > 0 {
-	// 		//m.busy = busy{flag: false}
-	// 		//m.rooms = msg
-	// 		m.table = newRoomsTable(msg, m.cursor, m.width)
-	// 		//m.selectedRoom = msg[m.cursor]
-	// 		return m, nil
-	// 	}
-	// 	return NewDevice(fmt.Errorf("THERE ARE NO ROOMS LOADED TO THE SYSTEM, PRESS CTRL+N TO CREATE NEW ROOM")), nil
 
 	case error:
 		m.err = msg
@@ -104,8 +89,8 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	roomsModel.table, cmd = roomsModel.table.Update(msg)
-	return roomsModel, cmd
+	m.table, cmd = m.table.Update(msg)
+	return m, cmd
 }
 
 func (m IpTableModel) View() string {
@@ -158,8 +143,9 @@ func getIpTableColumns(width int) []table.Column {
 
 		return []table.Column{
 			{Title: "", Width: 1},
-			{Title: "IPID", Width: 20},
-			{Title: "MODEL", Width: width - 49},
+			{Title: "IPID", Width: 8},
+			{Title: "MODEL", Width: 28},
+			{Title: "DESCRIPTION", Width: width - 57},
 			{Title: "STATUS", Width: 8},
 		}
 	}
@@ -167,8 +153,8 @@ func getIpTableColumns(width int) []table.Column {
 		{Title: "", Width: 1},
 		{Title: "ID", Width: 20},
 		{Title: "MODEL", Width: 35},
-		{Title: "DESCRIPTION", Width: 35},
-		{Title: "IP ADDRESS", Width: width - 141},
+		{Title: "DESCRIPTION", Width: width - 113},
+		{Title: "IP ADDRESS", Width: 35},
 		{Title: "STATUS", Width: 8},
 	}
 }
@@ -183,9 +169,9 @@ func getIpTableRows(width int, cursor int, entries []vc.IpTableEntry) []table.Ro
 			marker = "\u2192"
 		}
 		if small {
-			rows = append(rows, table.Row{marker, fmt.Sprintf("%d", ipt.ProgramIPID), ipt.Model, GetOnlineIcon(ipt.Status)})
+			rows = append(rows, table.Row{marker, strconv.FormatInt(int64(ipt.ProgramIPID), 16), ipt.Model, ipt.Description, GetOnlineIcon(ipt.Status)})
 		} else {
-			rows = append(rows, table.Row{marker, fmt.Sprintf("%d", ipt.ProgramIPID), ipt.Model, ipt.Description, ipt.RemoteIP, GetOnlineIcon(ipt.Status)})
+			rows = append(rows, table.Row{marker, strconv.FormatInt(int64(ipt.ProgramIPID), 16), ipt.Model, ipt.Description, ipt.RemoteIP, GetOnlineIcon(ipt.Status)})
 		}
 	}
 	return rows
