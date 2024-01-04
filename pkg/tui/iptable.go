@@ -183,9 +183,9 @@ func getIpTableRows(width int, cursor int, entries []vc.IpTableEntry) []table.Ro
 			marker = "\u2192"
 		}
 		if small {
-			rows = append(rows, table.Row{marker, fmt.Sprintf("%d", ipt.ProgramIPID), ipt.Model, GetStatus(ipt.Status)})
+			rows = append(rows, table.Row{marker, fmt.Sprintf("%d", ipt.ProgramIPID), ipt.Model, GetOnlineIcon(ipt.Status)})
 		} else {
-			rows = append(rows, table.Row{marker, fmt.Sprintf("%d", ipt.ProgramIPID), ipt.Model, ipt.Description, ipt.RemoteIP, GetStatus(ipt.Status)})
+			rows = append(rows, table.Row{marker, fmt.Sprintf("%d", ipt.ProgramIPID), ipt.Model, ipt.Description, ipt.RemoteIP, GetOnlineIcon(ipt.Status)})
 		}
 	}
 	return rows
