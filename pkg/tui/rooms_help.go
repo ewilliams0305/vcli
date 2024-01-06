@@ -23,12 +23,13 @@ type roomsKeyMap struct {
 	Create  key.Binding
 	Delete  key.Binding
 	Edit    key.Binding
+	Table   key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k roomsKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Quit, k.Up, k.Down, k.Start, k.Restart, k.Debug, k.Delete}
+	return []key.Binding{k.Quit, k.Up, k.Down, k.Start, k.Restart, k.Debug, k.Delete, k.Table}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -43,11 +44,11 @@ func (k roomsKeyMap) FullHelp() [][]key.Binding {
 var roomKeys = roomsKeyMap{
 	Up: key.NewBinding(
 		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "move up"),
+		key.WithHelp("↑/k", "up"),
 	),
 	Down: key.NewBinding(
 		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "move down"),
+		key.WithHelp("↓/j", "down"),
 	),
 	Help: key.NewBinding(
 		key.WithKeys("?", "h"),
@@ -67,7 +68,7 @@ var roomKeys = roomsKeyMap{
 	),
 	Debug: key.NewBinding(
 		key.WithKeys("ctrl+d"),
-		key.WithHelp("ctrl+d", "enable/disable debug"),
+		key.WithHelp("ctrl+d", "debug room"),
 	),
 	Restart: key.NewBinding(
 		key.WithKeys("ctrl+r"),
@@ -75,7 +76,11 @@ var roomKeys = roomsKeyMap{
 	),
 	Delete: key.NewBinding(
 		key.WithKeys("delete"),
-		key.WithHelp("delete", "delete selected room"),
+		key.WithHelp("delete", "delete room"),
+	),
+	Table: key.NewBinding(
+		key.WithKeys("ctrl+t"),
+		key.WithHelp("ip table", "view ip table"),
 	),
 }
 
