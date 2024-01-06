@@ -66,6 +66,7 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case int:
 		iptable.cursor = msg
+		iptable.selected = iptable.entries[msg]
 		return iptable, nil
 
 	case []vc.IpTableEntry:
@@ -74,6 +75,7 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		iptable.table = t
 		iptable.entries = msg
 		iptable.banner = NewBanner(fmt.Sprintf("VIEWING %s PROGRAM IP TABLES", iptable.roomId), BannerNormalState, iptable.width)
+		iptable.selected = msg[m.cursor]
 		return iptable, nil
 
 	case error:
@@ -112,6 +114,8 @@ func (m IpTableModel) View() string {
 	// 	room := fmt.Sprintf("\u2192 use keyboard actions to manage %s %s (ctrl+s, ctrl+d...)\n", m.selectedRoom.ID, m.selectedRoom.ProgramName)
 	// 	s += RenderMessageBox(m.width).Render(room)
 	// }
+
+	s += RenderMessageBox(m.width).Render(fmt.Sprintf("IPID: %d, %s %s", m.selected.ProgramIPID, m.selected.Model, m.selected.Description))
 
 	s += m.help.renderHelpInfo()
 	return s
