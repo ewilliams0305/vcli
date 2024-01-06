@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -12,6 +11,8 @@ import (
 
 	vc "github.com/ewilliams0305/VC4-CLI/pkg/vc"
 )
+
+var iptable *IpTableModel
 
 type IpTableModel struct {
 	roomId        string
@@ -25,8 +26,9 @@ type IpTableModel struct {
 	banner        *BannerModel
 }
 
-func InitialIpTableModel(width, height int) *IpTableModel {
-	return &IpTableModel{
+func InitialIpTableModel(width, height int, roomid string) *IpTableModel {
+	iptable = &IpTableModel{
+		roomId:   roomid,
 		entries:  make([]vc.IpTableEntry, 0),
 		selected: vc.IpTableEntry{},
 		cursor:   0,
@@ -35,24 +37,11 @@ func InitialIpTableModel(width, height int) *IpTableModel {
 		height:   height,
 		banner:   NewBanner("VIEW PROGRAM IP TABLES", BannerNormalState, width),
 	}
-}
-
-func UpdateIpTableModel(model IpTableModel) *IpTableModel {
-	return &IpTableModel{
-		table:    newIpTableDeviceTable(model.entries, model.cursor, model.width),
-		entries:  model.entries,
-		selected: vc.IpTableEntry{},
-		help:     NewHelpModel(),
-		width:    model.width,
-		height:   model.height,
-		cursor:   model.cursor,
-		err:      model.err,
-		banner:   NewBanner(fmt.Sprintf("VIEW %s IP TABLES", model.roomId), BannerNormalState, model.width),
-	}
+	return iptable
 }
 
 func (m IpTableModel) Init() tea.Cmd {
-	return RoomsQuery
+	return IpTableQuery(m.roomId)
 }
 
 func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -63,50 +52,51 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tickMsg:
 		w, h, _ := term.GetSize(int(os.Stdout.Fd()))
 		if w != m.width || h != m.height {
-			m.width = w
-			m.height = h
+			iptable.width = w
+			iptable.height = h
 		}
-		return UpdateIpTableModel(m), tea.Batch(IpTableQuery(m.roomId), tick)
+		return iptable, tea.Batch(tick, IpTableQuery(iptable.roomId))
 
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
-		m.table, cmd = m.table.Update(msg)
-		return UpdateIpTableModel(m), cmd
+		iptable.width = msg.Width
+		iptable.height = msg.Height
+		iptable.table, cmd = iptable.table.Update(msg)
+		return iptable, cmd
 
 	case int:
-		m.cursor = msg
-		return UpdateIpTableModel(m), nil
+		iptable.cursor = msg
+		return iptable, nil
 
 	case []vc.IpTableEntry:
-		// t := newIpTableDeviceTable(msg, m.cursor, m.width)
-		// m.table = t
-		m.entries = msg
-		return UpdateIpTableModel(m), nil
+		iptable.err = nil
+		t := newIpTableDeviceTable(msg, iptable.cursor, iptable.width)
+		iptable.table = t
+		iptable.entries = msg
+		return iptable, nil
 
 	case error:
-		m.err = msg
-		return UpdateIpTableModel(m), nil
+		iptable.err = msg
+		return iptable, nil
 
 	case tea.KeyMsg:
 		switch msg.String() {
 
 		case "ctrl+q", "q", "ctrl+c", "esc":
-			return ReturnToHomeModel(devices), tea.Batch(tick, DeviceInfoCommand)
+			return ReturnRoomsModel(), tea.Batch(tick, RoomsQuery)
 		case "down":
-			if m.err == nil {
-				m.table.SetCursor(m.table.Cursor() + 1)
-				return UpdateIpTableModel(m), cmdCursor(m.table.Cursor())
+			if iptable.err == nil {
+				iptable.table.SetCursor(iptable.table.Cursor() + 1)
+				return iptable, cmdCursor(iptable.table.Cursor())
 			}
 		case "up":
-			if m.err == nil {
-				m.table.SetCursor(m.table.Cursor() - 1)
-				return UpdateIpTableModel(m), cmdCursor(m.table.Cursor())
+			if iptable.err == nil {
+				iptable.table.SetCursor(iptable.table.Cursor() - 1)
+				return iptable, cmdCursor(iptable.table.Cursor())
 			}
 		}
 	}
-	m.table, cmd = m.table.Update(msg)
-	return UpdateIpTableModel(m), cmd
+	iptable.table, cmd = iptable.table.Update(msg)
+	return iptable, cmd
 }
 
 func (m IpTableModel) View() string {

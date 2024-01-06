@@ -123,9 +123,10 @@ func (m RoomsTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return roomsModel, cmdCursor(roomsModel.table.Cursor())
 			}
 
-		case "ctrl+t":
+		case "t", "ctrl+t":
 			if roomsModel.err == nil {
-				return InitialIpTableModel(roomsModel.width, roomsModel.height), IpTableQuery(roomsModel.selectedRoom.ID)
+				ipt := InitialIpTableModel(roomsModel.width, roomsModel.height, roomsModel.selectedRoom.ID)
+				return ipt, ipt.Init()
 			}
 		case "ctrl+s":
 			if roomsModel.err == nil {

@@ -80,7 +80,7 @@ var roomKeys = roomsKeyMap{
 	),
 	Table: key.NewBinding(
 		key.WithKeys("ctrl+t"),
-		key.WithHelp("ip table", "view ip table"),
+		key.WithHelp("ctrl+t", "view ip table"),
 	),
 }
 

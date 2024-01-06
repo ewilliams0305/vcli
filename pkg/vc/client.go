@@ -92,7 +92,7 @@ func (vc *VC) getBody(url string, result any) (err VirtualControlError) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return NewServerError(resp.StatusCode, errors.New("FAILED TO GET DEVICE INFO"))
+		return NewServerError(resp.StatusCode, errors.New("FFAILED GET REQUEST FROM SERVER"))
 	}
 
 	body, err := io.ReadAll(resp.Body)
