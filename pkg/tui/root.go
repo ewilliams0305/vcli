@@ -123,7 +123,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter", " ":
 			return arrowSelected(&m)
 
-		case "i":
+		case "i", "ctrl+i":
 			m.state = info
 			return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
 

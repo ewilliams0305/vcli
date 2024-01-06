@@ -85,6 +85,16 @@ func GetStatus(status string) string {
 	return "🤚"
 }
 
+func GetOnlineIcon(status string) string {
+	switch status {
+	case "ONLINE":
+		return "✅"
+	case "OFFLINE":
+		return "❌"
+	}
+	return "❌"
+}
+
 func CheckMark(status bool) string {
 	if status {
 		return " \u2713"
