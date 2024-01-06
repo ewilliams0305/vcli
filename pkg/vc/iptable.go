@@ -1,5 +1,10 @@
 package vc
 
+import (
+	"cmp"
+	"slices"
+)
+
 const (
 	IPTABLEBYID = "IpTableByPID"
 )
@@ -20,7 +25,14 @@ func getIpTable(server *VC, roomId string) ([]IpTableEntry, VirtualControlError)
 	if err != nil {
 		return make([]IpTableEntry, 0), NewServerError(500, err)
 	}
-	return results.IpTableDevice.IpTablePrograms.IPTableByPID, nil
+
+	comparById := func(a, b IpTableEntry) int {
+		return cmp.Compare(a.ProgramIPID, b.ProgramIPID)
+	}
+
+	ipt := results.IpTableDevice.IpTablePrograms.IPTableByPID
+	slices.SortFunc(ipt, comparById)
+	return ipt, nil
 }
 
 type IpTableResponse struct {

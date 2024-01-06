@@ -22,17 +22,17 @@ type IpTableModel struct {
 	selected      vc.IpTableEntry
 	err           error
 	help          HelpModel
-	cursor        int
 	width, height int
 	banner        *BannerModel
 }
 
 func InitialIpTableModel(width, height int, roomid string) *IpTableModel {
+	entries := make([]vc.IpTableEntry, 0)
 	iptable = &IpTableModel{
+		table:    newIpTableDeviceTable(entries, 0, width),
 		roomId:   roomid,
-		entries:  make([]vc.IpTableEntry, 0),
+		entries:  entries,
 		selected: vc.IpTableEntry{},
-		cursor:   0,
 		help:     NewHelpModel(),
 		width:    width,
 		height:   height,
@@ -65,17 +65,18 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return iptable, cmd
 
 	case int:
-		iptable.cursor = msg
 		iptable.selected = iptable.entries[msg]
 		return iptable, nil
 
 	case []vc.IpTableEntry:
 		iptable.err = nil
-		t := newIpTableDeviceTable(msg, iptable.cursor, iptable.width)
-		iptable.table = t
 		iptable.entries = msg
 		iptable.banner = NewBanner(fmt.Sprintf("VIEWING %s PROGRAM IP TABLES", iptable.roomId), BannerNormalState, iptable.width)
-		iptable.selected = msg[m.cursor]
+		iptable.table.SetRows(getIpTableRows(iptable.width, iptable.table.Cursor(), msg))
+
+		if len(msg) != 0 && iptable.table.Cursor() >= 0 {
+			iptable.selected = msg[iptable.table.Cursor()]
+		}
 		return iptable, nil
 
 	case error:
@@ -88,35 +89,17 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "ctrl+q", "q", "ctrl+c", "esc":
 			return ReturnRoomsModel(), tea.Batch(tick, RoomsQuery)
-		case "down":
-			if iptable.err == nil {
-				iptable.table.SetCursor(iptable.table.Cursor() + 1)
-				return iptable, cmdCursor(iptable.table.Cursor())
-			}
-		case "up":
-			if iptable.err == nil {
-				iptable.table.SetCursor(iptable.table.Cursor() - 1)
-				return iptable, cmdCursor(iptable.table.Cursor())
-			}
 		}
 	}
-	iptable.table, cmd = iptable.table.Update(msg)
+
+	iptable.table, cmd = m.table.Update(msg)
 	return iptable, cmd
 }
 
 func (m IpTableModel) View() string {
 	s := m.banner.View() + "\n"
 	s += BaseStyle.Render(m.table.View()) + "\n\n"
-
-	// if m.busy.flag {
-	// 	s += RenderMessageBox(m.width).Render(m.busy.message)
-	// } else {
-	// 	room := fmt.Sprintf("\u2192 use keyboard actions to manage %s %s (ctrl+s, ctrl+d...)\n", m.selectedRoom.ID, m.selectedRoom.ProgramName)
-	// 	s += RenderMessageBox(m.width).Render(room)
-	// }
-
 	s += RenderMessageBox(m.width).Render(fmt.Sprintf("IPID: %d, %s %s", m.selected.ProgramIPID, m.selected.Model, m.selected.Description))
-
 	s += m.help.renderHelpInfo()
 	return s
 }
@@ -133,6 +116,7 @@ func newIpTableDeviceTable(entries []vc.IpTableEntry, cursor int, width int) tab
 		table.WithHeight(16),
 		table.WithWidth(width),
 	)
+	t.Focus()
 
 	s := table.DefaultStyles()
 	s.Header = s.Header.
