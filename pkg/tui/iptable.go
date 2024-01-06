@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -35,7 +36,7 @@ func InitialIpTableModel(width, height int, roomid string) *IpTableModel {
 		help:     NewHelpModel(),
 		width:    width,
 		height:   height,
-		banner:   NewBanner("VIEW PROGRAM IP TABLES", BannerNormalState, width),
+		banner:   NewBanner(fmt.Sprintf("VIEWING %s PROGRAM IP TABLES", roomid), BannerNormalState, width),
 	}
 	return iptable
 }
@@ -72,10 +73,12 @@ func (m IpTableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		t := newIpTableDeviceTable(msg, iptable.cursor, iptable.width)
 		iptable.table = t
 		iptable.entries = msg
+		iptable.banner = NewBanner(fmt.Sprintf("VIEWING %s PROGRAM IP TABLES", iptable.roomId), BannerNormalState, iptable.width)
 		return iptable, nil
 
 	case error:
 		iptable.err = msg
+		iptable.banner = NewBanner(msg.Error(), BannerErrorState, iptable.width)
 		return iptable, nil
 
 	case tea.KeyMsg:
@@ -181,45 +184,6 @@ func getIpTableRows(width int, cursor int, entries []vc.IpTableEntry) []table.Ro
 		}
 	}
 	return rows
-}
-
-func NewIpTableErrorTable(msg vc.VirtualControlError) IpTableModel {
-	columns := []table.Column{
-		{Title: "SERVER ERROR", Width: 50},
-		{Title: "", Width: roomsModel.width - 56},
-	}
-
-	rows := []table.Row{
-		{"ERROR", msg.Error()},
-		{"", ""},
-		{"MESSAGE", "There was an error connecting to the VC4 service"},
-		{"", "Please verify your IP address and token"},
-		{"", "Please veriify the virtualcontrol service is enabled and running."},
-	}
-
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(7),
-	)
-
-	s := table.DefaultStyles()
-	s.Header = s.Header.
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("240")).
-		BorderBottom(true).
-		Bold(false)
-	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("#FF0000")).
-		Bold(true).Italic(true)
-	t.SetStyles(s)
-
-	return IpTableModel{
-		table: t,
-		err:   msg,
-	}
 }
 
 func IpTableQuery(id string) tea.Cmd {
