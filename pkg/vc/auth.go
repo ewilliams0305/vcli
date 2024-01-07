@@ -1,5 +1,11 @@
 package vc
 
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+)
+
 const (
 	TOKENREQUEST = "Token"
 )
@@ -22,7 +28,43 @@ func (v *VC) GetTokens() ([]ApiToken, VirtualControlError) {
 }
 
 func (v *VC) CreateToken(readonly bool, description string) (ApiToken, VirtualControlError) {
+	request := ApiTokenRequest{
+		Status: 2,
+	}
 
+	if readonly {
+		request.Status = 1
+	}
+
+	jsonValue, err := json.Marshal(request)
+	if err != nil {
+		return ApiToken{}, NewServerError(500, err)
+	}
+
+	resp, err := v.client.Post(TOKENREQUEST, "application/json", bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return ApiToken{}, NewServerError(resp.StatusCode, err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ApiToken{}, NewServerError(resp.StatusCode, err)
+	}
+
+	actions := ActionResponse[ApiToken]{}
+	err = json.Unmarshal(body, &actions)
+	if err != nil {
+		return ApiToken{}, NewServerError(resp.StatusCode, err)
+	}
+
+	return actions.Actions[0].Results[0].Object, nil
+}
+
+type ApiTokenRequest struct {
+	Description string      `json:"Description"`
+	Status      TokenStatus `json:"Status"`
 }
 
 type ApitTokenResponse struct {
