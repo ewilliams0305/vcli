@@ -95,6 +95,14 @@ func GetOnlineIcon(status string) string {
 	return "❌"
 }
 
+func GetReadonlyIcon(status vc.TokenStatus) string {
+
+	if status == vc.ReadOnlyToken {
+		return "✅"
+	}
+	return "❌"
+}
+
 func CheckMark(status bool) string {
 	if status {
 		return " \u2713"

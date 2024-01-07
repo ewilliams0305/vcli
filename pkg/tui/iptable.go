@@ -171,7 +171,6 @@ func getIpTableRows(width int, cursor int, entries []vc.IpTableEntry) []table.Ro
 	}
 	return rows
 }
-
 func IpTableQuery(id string) tea.Cmd {
 
 	return func() tea.Msg {
