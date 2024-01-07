@@ -165,6 +165,34 @@ func getApiTokenRows(width int, cursor int, entries []vc.ApiToken) []table.Row {
 	return rows
 }
 
+func QueryTokens() tea.Msg {
+	tokens, err := server.GetTokens()
+	if err != nil {
+		return err
+	}
+	return tokens
+}
+
+func CreateToken(description string, readonly bool) tea.Cmd {
+	return func() tea.Msg {
+		r, e := server.CreateToken(readonly, description)
+		if e != nil {
+			return e
+		}
+		return r
+	}
+}
+
+func EditToken(description string, readonly bool, token string) tea.Cmd {
+	return func() tea.Msg {
+		r, e := server.EditToken(readonly, description, token)
+		if e != nil {
+			return e
+		}
+		return r
+	}
+}
+
 func DeleteToken(token string) tea.Cmd {
 	return func() tea.Msg {
 		r, e := server.DeleteToken(token)
@@ -173,12 +201,4 @@ func DeleteToken(token string) tea.Cmd {
 		}
 		return r
 	}
-}
-
-func QueryTokens() tea.Msg {
-	tokens, err := server.GetTokens()
-	if err != nil {
-		return err
-	}
-	return tokens
 }
