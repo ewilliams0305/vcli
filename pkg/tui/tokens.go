@@ -92,7 +92,7 @@ func (m TokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m TokenModel) View() string {
 	s := m.banner.View() + "\n"
 	s += BaseStyle.Render(m.table.View()) + "\n\n"
-	s += RenderMessageBox(m.width).Render(fmt.Sprintf("API TOKEN: %s", m.selected.Token))
+	s += RenderMessageBox(m.width).Render(fmt.Sprintf("API TOKEN: %s\n\n", m.selected.Token))
 
 	if m.err != nil {
 		s += RenderErrorBox("FAILED MANAGING API TOKENS", m.err)
@@ -135,9 +135,9 @@ func newApiTokensTable(entries []vc.ApiToken, cursor int, width int) table.Model
 func getApiKeyColumns(width int) []table.Column {
 	return []table.Column{
 		{Title: "", Width: 1},
-		{Title: "DESCRIPTION", Width: 20},
+		{Title: "DESCRIPTION", Width: 16},
 		{Title: "READONLY", Width: 8},
-		{Title: "TOKEN", Width: width - 30},
+		{Title: "TOKEN", Width: width - 35},
 	}
 }
 
