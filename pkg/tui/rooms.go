@@ -13,8 +13,6 @@ import (
 	vc "github.com/ewilliams0305/VC4-CLI/pkg/vc"
 )
 
-var roomsModel *RoomsTableModel
-
 type RoomsTableModel struct {
 	table         table.Model
 	rooms         vc.Rooms

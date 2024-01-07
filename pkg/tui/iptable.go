@@ -13,8 +13,6 @@ import (
 	vc "github.com/ewilliams0305/VC4-CLI/pkg/vc"
 )
 
-var iptable *IpTableModel
-
 type IpTableModel struct {
 	roomId        string
 	table         table.Model
@@ -173,7 +171,6 @@ func getIpTableRows(width int, cursor int, entries []vc.IpTableEntry) []table.Ro
 	}
 	return rows
 }
-
 func IpTableQuery(id string) tea.Cmd {
 
 	return func() tea.Msg {

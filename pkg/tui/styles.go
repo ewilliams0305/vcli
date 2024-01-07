@@ -45,6 +45,7 @@ func RenderMessageBox(width int) lipgloss.Style {
 		Background(lipgloss.Color(PrimaryDark)).
 		PaddingTop(1).
 		PaddingLeft(1).
+		PaddingRight(1).
 		MarginBottom(1).
 		Width(width).Align(lipgloss.Top).
 		Height(3)
@@ -91,6 +92,14 @@ func GetOnlineIcon(status string) string {
 		return "✅"
 	case "OFFLINE":
 		return "❌"
+	}
+	return "❌"
+}
+
+func GetReadonlyIcon(status vc.TokenStatus) string {
+
+	if status == vc.ReadOnlyToken {
+		return "✅"
 	}
 	return "❌"
 }

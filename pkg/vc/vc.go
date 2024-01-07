@@ -31,6 +31,7 @@ type VirtualControl interface {
 	VcInfoApi
 	VcRoomApi
 	VcIpTableApi
+	VcApiToken
 }
 
 type VC struct {

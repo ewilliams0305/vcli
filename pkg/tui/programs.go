@@ -12,8 +12,6 @@ import (
 	vc "github.com/ewilliams0305/VC4-CLI/pkg/vc"
 )
 
-var programsView *ProgramsModel
-
 type ProgramsModel struct {
 	table         table.Model
 	Programs      vc.Programs
