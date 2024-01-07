@@ -25,13 +25,13 @@ const (
 	// INFO VIEW, displays all hardware and system information
 	info appState = 3
 	// DEVICES VIEW, displays all the device IP Tables and maps
-	devices appState = 4
+	//devices appState = 4
 	// AUTH VIEW, displays all auth and api tokens
-	auth appState = 5
+	auth appState = 4
 	// SYSTEM SERVICE VIEW, displays logs and service status
-	systemd appState = 6
+	systemd appState = 5
 	// HELP VIEW
-	helpState appState = 7
+	helpState appState = 6
 )
 
 type MainModel struct {
@@ -49,7 +49,7 @@ func InitialModel() MainModel {
 	w, h, _ := term.GetSize(int(os.Stdout.Fd()))
 	app = &MainModel{
 		device:  vc.DeviceInfo{},
-		actions: []string{"Refresh", "Manage Programs", "Manage Rooms", "Device Information", "Devices", "Authorization", "System Service", "Help"},
+		actions: []string{"Refresh", "Manage Programs", "Manage Rooms", "Device Information", "API Tokens", "System Service", "Help"},
 		help:    NewHelpModel(),
 		width:   w,
 		height:  h,
@@ -140,9 +140,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			authView := InitialTokensModel(m.width, m.height)
 			return authView, authView.Init()
 		}
-
 	}
-
 	// Return the updated model to the Bubble Tea runtime for processing.
 	// Note that we're not returning a command.
 	return m, nil
@@ -195,7 +193,7 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 		m.state = auth
 		authView := InitialTokensModel(m.width, m.height)
 		return authView, authView.Init()
-	case int(devices):
+	//case int(devices):
 	case int(systemd):
 		return InitialSystemModel(), nil
 	case int(helpState):
