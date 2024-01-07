@@ -84,16 +84,30 @@ func (m TokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 
+		case "up":
+			m.table, cmd = m.table.Update(msg)
+			m.selected = m.entries[m.table.Cursor()]
+			return m, cmd
+
+		case "down":
+			m.table, cmd = m.table.Update(msg)
+			m.selected = m.entries[m.table.Cursor()]
+			return m, cmd
+
 		case "ctrl+q", "q", "ctrl+c", "esc":
 			return ReturnToHomeModel(auth), tea.Batch(tick, DeviceInfoCommand)
 		case "ctrl+d", "delete":
 			if len(m.selected.Token) > 10 {
 				return DeleteTokenFormModel(&m.selected), nil
 			}
-			// case "ctrl+n", "n":
-			// case "ctrl+e", "enter":
-			//}
-
+		case "ctrl+n", "n":
+			form := NewTokenFormModel()
+			return form, form.Init()
+		case "ctrl+e", "enter":
+			if len(m.selected.Token) > 10 {
+				form := EditTokenFormModel(&m.selected)
+				return form, form.Init()
+			}
 		}
 	}
 

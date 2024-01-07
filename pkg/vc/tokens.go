@@ -3,6 +3,7 @@ package vc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -31,8 +32,9 @@ func (v *VC) GetTokens() ([]ApiToken, VirtualControlError) {
 }
 
 func (v *VC) CreateToken(readonly bool, description string) (ApiToken, VirtualControlError) {
-	request := ApiTokenRequest{
-		Status: 2,
+	request := CreateApiTokenRequest{
+		Status:      2,
+		Description: description,
 	}
 
 	if readonly {
@@ -44,9 +46,13 @@ func (v *VC) CreateToken(readonly bool, description string) (ApiToken, VirtualCo
 		return ApiToken{}, NewServerError(500, err)
 	}
 
-	resp, err := v.client.Post(TOKENREQUEST, "application/json", bytes.NewBuffer(jsonValue))
+	resp, err := v.client.Post(v.url+TOKENREQUEST, "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
-		return ApiToken{}, NewServerError(resp.StatusCode, err)
+		return ApiToken{}, NewServerError(500, err)
+	}
+
+	if resp.StatusCode != 200 {
+		return ApiToken{}, NewServerError(resp.StatusCode, fmt.Errorf("FAILED CREATING API KEY"))
 	}
 
 	defer resp.Body.Close()
@@ -66,8 +72,10 @@ func (v *VC) CreateToken(readonly bool, description string) (ApiToken, VirtualCo
 }
 
 func (v *VC) EditToken(readonly bool, description string, token string) (ApiToken, VirtualControlError) {
-	request := ApiTokenRequest{
-		Status: 2,
+	request := EditApiTokenRequest{
+		Status:      2,
+		Description: description,
+		Token:       token,
 	}
 
 	if readonly {
@@ -79,14 +87,19 @@ func (v *VC) EditToken(readonly bool, description string, token string) (ApiToke
 		return ApiToken{}, NewServerError(500, err)
 	}
 
-	req, reqErr := http.NewRequest("PUT", TOKENREQUEST, bytes.NewBuffer(jsonValue))
+	req, reqErr := http.NewRequest("PUT", v.url+TOKENREQUEST, bytes.NewBuffer(jsonValue))
 	if reqErr != nil {
 		return ApiToken{}, NewServerError(500, reqErr)
 	}
+	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := v.client.Do(req)
 	if err != nil {
-		return ApiToken{}, NewServerError(resp.StatusCode, err)
+		return ApiToken{}, NewServerError(500, err)
+	}
+
+	if resp.StatusCode != 200 {
+		return ApiToken{}, NewServerError(resp.StatusCode, fmt.Errorf("FAILED CREATING API KEY"))
 	}
 
 	defer resp.Body.Close()
@@ -120,9 +133,15 @@ func (v *VC) DeleteToken(token string) (bool, VirtualControlError) {
 	return true, nil
 }
 
-type ApiTokenRequest struct {
+type CreateApiTokenRequest struct {
 	Description string      `json:"Description"`
 	Status      TokenStatus `json:"Status"`
+}
+
+type EditApiTokenRequest struct {
+	Description string      `json:"Description"`
+	Status      TokenStatus `json:"Status"`
+	Token       string      `json:"Token"`
 }
 
 type ApitTokenResponse struct {
