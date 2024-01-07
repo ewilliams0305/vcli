@@ -86,6 +86,14 @@ func (m TokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "ctrl+q", "q", "ctrl+c", "esc":
 			return ReturnToHomeModel(auth), tea.Batch(tick, DeviceInfoCommand)
+		case "ctrl+d", "delete":
+			if len(m.selected.Token) > 10 {
+				return DeleteTokenFormModel(&m.selected), nil
+			}
+			// case "ctrl+n", "n":
+			// case "ctrl+e", "enter":
+			//}
+
 		}
 	}
 
@@ -155,6 +163,16 @@ func getApiTokenRows(width int, cursor int, entries []vc.ApiToken) []table.Row {
 		rows = append(rows, table.Row{marker, token.Description, GetReadonlyIcon(token.Status), token.Token})
 	}
 	return rows
+}
+
+func DeleteToken(token string) tea.Cmd {
+	return func() tea.Msg {
+		r, e := server.DeleteToken(token)
+		if e != nil {
+			return e
+		}
+		return r
+	}
 }
 
 func QueryTokens() tea.Msg {

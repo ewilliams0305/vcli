@@ -41,7 +41,7 @@ func (m DeleteTokenForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case bool:
 		if msg {
-			return InitialTokensModel(app.width, app.height), tea.Batch(QueryTokens, tick)
+			return InitialTokensModel(app.width, app.height), tea.Batch(DeleteToken(m.token.Token), QueryTokens, tick)
 		}
 		return InitialTokensModel(app.width, app.height), tea.Batch(QueryTokens, tick)
 	case tea.KeyMsg:

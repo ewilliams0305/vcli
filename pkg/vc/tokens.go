@@ -15,6 +15,7 @@ type VcApiToken interface {
 	GetTokens() ([]ApiToken, VirtualControlError)
 	CreateToken(readonly bool, description string) (ApiToken, VirtualControlError)
 	EditToken(readonly bool, description string, token string) (ApiToken, VirtualControlError)
+	DeleteToken(token string) (bool, VirtualControlError)
 }
 
 func (v *VC) GetTokens() ([]ApiToken, VirtualControlError) {
@@ -102,6 +103,21 @@ func (v *VC) EditToken(readonly bool, description string, token string) (ApiToke
 	}
 
 	return actions.Actions[0].Results[0].Object, nil
+}
+
+func (v *VC) DeleteToken(token string) (bool, VirtualControlError) {
+
+	req, reqErr := http.NewRequest("DELETE", v.url+TOKENREQUEST+"/"+token, nil)
+	if reqErr != nil {
+		return false, NewServerError(500, reqErr)
+	}
+
+	resp, err := v.client.Do(req)
+	if err != nil {
+		return false, NewServerError(resp.StatusCode, err)
+	}
+
+	return true, nil
 }
 
 type ApiTokenRequest struct {
