@@ -134,6 +134,11 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "s", "ctrl+s":
 			m.state = programs
 			return InitialSystemModel(), nil
+
+		case "a", "ctrl+a":
+			m.state = auth
+			authView := InitialTokensModel(m.width, m.height)
+			return authView, authView.Init()
 		}
 
 	}
@@ -187,6 +192,9 @@ func arrowSelected(m *MainModel) (tea.Model, tea.Cmd) {
 		m.state = info
 		return NewDeviceInfo(m.width, m.height), DeviceInfoCommand
 	case int(auth):
+		m.state = auth
+		authView := InitialTokensModel(m.width, m.height)
+		return authView, authView.Init()
 	case int(devices):
 	case int(systemd):
 		return InitialSystemModel(), nil
