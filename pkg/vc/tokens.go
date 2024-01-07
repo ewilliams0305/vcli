@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"net/http"
 )
 
 const (
@@ -13,6 +14,7 @@ const (
 type VcApiToken interface {
 	GetTokens() ([]ApiToken, VirtualControlError)
 	CreateToken(readonly bool, description string) (ApiToken, VirtualControlError)
+	EditToken(readonly bool, description string, token string) (ApiToken, VirtualControlError)
 }
 
 func (v *VC) GetTokens() ([]ApiToken, VirtualControlError) {
@@ -42,6 +44,46 @@ func (v *VC) CreateToken(readonly bool, description string) (ApiToken, VirtualCo
 	}
 
 	resp, err := v.client.Post(TOKENREQUEST, "application/json", bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return ApiToken{}, NewServerError(resp.StatusCode, err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ApiToken{}, NewServerError(resp.StatusCode, err)
+	}
+
+	actions := ActionResponse[ApiToken]{}
+	err = json.Unmarshal(body, &actions)
+	if err != nil {
+		return ApiToken{}, NewServerError(resp.StatusCode, err)
+	}
+
+	return actions.Actions[0].Results[0].Object, nil
+}
+
+func (v *VC) EditToken(readonly bool, description string, token string) (ApiToken, VirtualControlError) {
+	request := ApiTokenRequest{
+		Status: 2,
+	}
+
+	if readonly {
+		request.Status = 1
+	}
+
+	jsonValue, err := json.Marshal(request)
+	if err != nil {
+		return ApiToken{}, NewServerError(500, err)
+	}
+
+	req, reqErr := http.NewRequest("PUT", TOKENREQUEST, bytes.NewBuffer(jsonValue))
+	if reqErr != nil {
+		return ApiToken{}, NewServerError(500, reqErr)
+	}
+
+	resp, err := v.client.Do(req)
 	if err != nil {
 		return ApiToken{}, NewServerError(resp.StatusCode, err)
 	}

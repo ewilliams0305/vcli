@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ewilliams0305/VC4-CLI/pkg/vc"
@@ -16,18 +17,21 @@ type TokenModel struct {
 	entries       []vc.ApiToken
 	selected      vc.ApiToken
 	err           error
-	help          HelpModel
+	help          TokensHelpModel
 	width, height int
 	banner        *BannerModel
 }
 
 func InitialTokensModel(width, height int) *TokenModel {
 	entries := make([]vc.ApiToken, 0)
+	token := textarea.New()
+	token.Placeholder = "selected token displayed here"
+	token.Focus()
 	tokens := &TokenModel{
 		table:    newApiTokensTable(entries, 0, width),
 		entries:  entries,
 		selected: vc.ApiToken{},
-		help:     NewHelpModel(),
+		help:     NewtokensHelpModel(),
 		width:    width,
 		height:   height,
 		banner:   NewBanner("MANAGE API TOKENS", BannerNormalState, width),
@@ -93,7 +97,6 @@ func (m TokenModel) View() string {
 	s := m.banner.View() + "\n"
 	s += BaseStyle.Render(m.table.View()) + "\n\n"
 	s += RenderMessageBox(m.width).Render(fmt.Sprintf("API TOKEN: %s\n\n", m.selected.Token))
-
 	if m.err != nil {
 		s += RenderErrorBox("FAILED MANAGING API TOKENS", m.err)
 	}
