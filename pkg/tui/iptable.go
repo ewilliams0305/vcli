@@ -13,8 +13,6 @@ import (
 	vc "github.com/ewilliams0305/VC4-CLI/pkg/vc"
 )
 
-var iptable *IpTableModel
-
 type IpTableModel struct {
 	roomId        string
 	table         table.Model
