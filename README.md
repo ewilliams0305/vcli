@@ -112,6 +112,11 @@ A new program will be uploaded and a room will be instantly instantiated with th
 # 🦮 Guides
 Tutorials for the `vcli` providing use cases and examples 
 
+## 🚀 Launching Application
+You can launch the application on the VC4 machine via an SSH session by simply running the vcli executable on the appliance.  Alternaively you can launch the vcli from your local machince with the -t and -h flags provided.
+
+![Readme Image](./docs/connecting.gif)
+
 ## 🚻 Controlling Rooms
 
 ### Start and stop rooms
@@ -137,9 +142,10 @@ Navigate to the program menu, with the program highlighted press ctrl+d or the d
 
 ![DELETE PROGRAM](./docs/del_prog.gif)
 
-## ⚖️ Authorization and Licenses
+## ⚖️ API Tokens
+Users can gernerate, edit, and delete API tokens from the VCLI console.  Navigate to the API Token menu option or press ctrl+a to enter the token view.  Press ctrl+n to create a new API token or use the up/down arrows to navigate the list of API tokens followed by the enter or delete keys.
 
-## 📲 Device mapping and status
+![Readme Image](./docs/apitoken.gif)
 
 ## ℹ️ System information 
 
