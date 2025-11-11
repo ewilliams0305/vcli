@@ -57,7 +57,7 @@ Copy this file to your VC4 appliance and execute `chmod +x ./vcli` to allow exec
 
 # 🚀 Launching
 Once compiled you can launch the application by executing the binary. 
-The application supports serveral command line argument flags
+The application supports several command line argument flags
 
 `-host` or short `-h`  // Specify Host
 
